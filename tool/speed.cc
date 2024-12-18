@@ -1119,8 +1119,12 @@ static bool SpeedHashChunk(const EVP_MD *md, std::string name,
 
         return EVP_DigestInit_ex(ctx.get(), md, NULL /* ENGINE */) &&
                EVP_DigestUpdate(ctx.get(), input.get(), chunk_len) &&
+#if (!defined(OPENSSL_1_0_BENCHMARK) && !defined(BORINGSSL_BENCHMARK) && !defined(OPENSSL_IS_AWSLC)) || AWSLC_API_VERSION >= 31
                (EVP_MD_flags(md) & EVP_MD_FLAG_XOF) ?
                  EVP_DigestFinalXOF(ctx.get(), digest, 32) : EVP_DigestFinal_ex(ctx.get(), digest, &md_len);
+#else
+               EVP_DigestFinal_ex(ctx.get(), digest, &md_len);
+#endif
       })) {
     fprintf(stderr, "EVP_DigestInit_ex failed.\n");
     ERR_print_errors_fp(stderr);
@@ -2815,7 +2819,6 @@ bool Speed(const std::vector<std::string> &args) {
        !SpeedHash(EVP_md4(), "MD4", selected) ||
 #endif
        !SpeedHash(EVP_md5(), "MD5", selected) ||
-       !SpeedHash(EVP_md5_sha1(), "MD5-SHA-1", selected) ||
        !SpeedHash(EVP_sha1(), "SHA-1", selected) ||
        !SpeedHash(EVP_sha224(), "SHA-224", selected) ||
        !SpeedHash(EVP_sha256(), "SHA-256", selected) ||
@@ -2836,6 +2839,9 @@ bool Speed(const std::vector<std::string> &args) {
 #if (!defined(BORINGSSL_BENCHMARK) && !defined(OPENSSL_IS_AWSLC)) || AWSLC_API_VERSION >= 20
        // BoringSSL doesn't support ripemd160
        !SpeedHash(EVP_ripemd160(), "RIPEMD-160", selected) ||
+#endif
+#if !defined(BORINGSSL_BENCHMARK)
+       !SpeedHash(EVP_md5_sha1(), "MD5-SHA-1", selected) ||
 #endif
        !SpeedHmac(EVP_md5(), "HMAC-MD5", selected) ||
        !SpeedHmac(EVP_sha1(), "HMAC-SHA1", selected) ||
