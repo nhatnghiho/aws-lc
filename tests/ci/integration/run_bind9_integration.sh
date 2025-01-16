@@ -15,7 +15,7 @@ source tests/ci/common_posix_setup.sh
 #      - BIND9_BUILD_FOLDER
 
 # Assumes script is executed from the root of aws-lc directory
-SCRATCH_FOLDER="${SRC_ROOT}/BIND9_BUILD_ROOT"
+SCRATCH_FOLDER="${HOME}/BIND9_BUILD_ROOT"
 BIND9_SRC_FOLDER="${SCRATCH_FOLDER}/bind9"
 BIND9_BUILD_FOLDER="${SCRATCH_FOLDER}/bind9-aws-lc"
 AWS_LC_BUILD_FOLDER="${SCRATCH_FOLDER}/aws-lc-build"
