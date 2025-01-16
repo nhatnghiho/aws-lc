@@ -1,0 +1,42 @@
+diff --git a/Lib/test/libregrtest/worker.py b/Lib/test/libregrtest/worker.py
+index 556706e..99fe557 100644
+--- a/Lib/test/libregrtest/worker.py
++++ b/Lib/test/libregrtest/worker.py
+@@ -1,6 +1,7 @@
+ import subprocess
+ import sys
+ import os
++import signal
+ from typing import Any, NoReturn
+
+ from test.support import os_helper
+@@ -11,10 +12,22 @@
+ from .utils import (
+     StrPath, StrJSON, TestFilter,
+     get_temp_dir, get_work_dir, exit_timeout)
++from contextlib import contextmanager
+
+
+ USE_PROCESS_GROUP = (hasattr(os, "setsid") and hasattr(os, "killpg"))
+
++@contextmanager
++def restore_sigint():
++    original_handler = signal.getsignal(signal.SIGINT)
++    signal.signal(signal.SIGINT, signal.default_int_handler)
++    try:
++        yield
++    except:
++        raise
++    finally:
++        signal.signal(signal.SIGINT, original_handler)
++
+
+ def create_worker_process(runtests: WorkerRunTests, output_fd: int,
+                           tmp_dir: StrPath | None = None) -> subprocess.Popen:
+@@ -101,4 +114,5 @@ def main():
+ 
+ 
+ if __name__ == "__main__":
+-    main()
++    with restore_sigint():
++        main()
