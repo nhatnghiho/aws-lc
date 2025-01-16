@@ -1,0 +1,44 @@
+diff --git a/Lib/test/libregrtest/worker.py b/Lib/test/libregrtest/worker.py
+index 0c9f5bd..1dfa8ee 100644
+--- a/Lib/test/libregrtest/worker.py
++++ b/Lib/test/libregrtest/worker.py
+@@ -1,6 +1,7 @@
+ import subprocess
+ import sys
+ import os
++import signal
+ from typing import Any, NoReturn
+ 
+ from test.support import os_helper, Py_DEBUG
+@@ -11,6 +12,7 @@
+ from .utils import (
+     StrPath, StrJSON, TestFilter,
+     get_temp_dir, get_work_dir, exit_timeout)
++from contextlib import contextmanager
+ 
+ 
+ USE_PROCESS_GROUP = (hasattr(os, "setsid") and hasattr(os, "killpg"))
+@@ -18,6 +20,16 @@
+     'test_ioctl',
+ }
+ 
++@contextmanager
++def restore_sigint():
++    original_handler = signal.getsignal(signal.SIGINT)
++    signal.signal(signal.SIGINT, signal.default_int_handler)
++    try:
++        yield
++    except:
++        raise
++    finally:
++        signal.signal(signal.SIGINT, original_handler)
+ 
+ def create_worker_process(runtests: WorkerRunTests, output_fd: int,
+                           tmp_dir: StrPath | None = None) -> subprocess.Popen[str]:
+@@ -119,4 +131,5 @@ def main() -> NoReturn:
+ 
+ 
+ if __name__ == "__main__":
+-    main()
++    with restore_sigint():
++        main()

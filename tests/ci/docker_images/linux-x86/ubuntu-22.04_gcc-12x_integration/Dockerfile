@@ -74,7 +74,3 @@ RUN set -ex && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
-
-RUN adduser --disabled-password --gecos '' integration && \
-    adduser integration sudo && \
-    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

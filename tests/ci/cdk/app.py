@@ -9,6 +9,7 @@ from aws_cdk import Environment, App
 from cdk.aws_lc_analytics_stack import  AwsLcGitHubAnalyticsStack
 from cdk.aws_lc_android_ci_stack import AwsLcAndroidCIStack
 from cdk.aws_lc_github_ci_stack import AwsLcGitHubCIStack
+from cdk.aws_lc_integration_stack import AwsLcIntegrationStack
 from cdk.aws_lc_github_fuzz_ci_stack import  AwsLcGitHubFuzzCIStack
 from cdk.aws_lc_ec2_test_framework_ci_stack import AwsLcEC2TestingCIStack
 from cdk.linux_docker_image_batch_build_stack import LinuxDockerImageBatchBuildStack
@@ -41,7 +42,7 @@ AwsLcGitHubCIStack(app, "aws-lc-ci-linux-x86", x86_build_spec_file, env=env)
 arm_build_spec_file = "cdk/codebuild/github_ci_linux_arm_omnibus.yaml"
 AwsLcGitHubCIStack(app, "aws-lc-ci-linux-arm", arm_build_spec_file, env=env)
 integration_build_spec_file = "cdk/codebuild/github_ci_integration_omnibus.yaml"
-AwsLcGitHubCIStack(app, "aws-lc-ci-integration", integration_build_spec_file, env=env)
+AwsLcIntegrationStack(app, "aws-lc-ci-integration", integration_build_spec_file, env=env)
 win_x86_build_spec_file = "cdk/codebuild/github_ci_windows_x86_omnibus.yaml"
 AwsLcGitHubCIStack(app, "aws-lc-ci-windows-x86", win_x86_build_spec_file, env=env)
 fuzz_build_spec_file = "cdk/codebuild/github_ci_fuzzing_omnibus.yaml"
