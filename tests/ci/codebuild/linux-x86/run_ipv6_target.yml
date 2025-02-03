@@ -1,0 +1,74 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+
+version: 0.2
+
+env:
+  variables:
+    GOPROXY: https://proxy.golang.org,direct
+
+phases:
+  pre_build:
+    commands:
+#      - apt-get update && apt-get -y --no-install-recommends upgrade && apt-get -y --no-install-recommends install docker netcat dnsutils policycoreutils iptables lsof libfstrm0 fstrm-bin python3-ply
+      - sysctl -w net.ipv6.conf.all.disable_ipv6=0
+      - sysctl -w net.ipv6.conf.default.disable_ipv6=0
+      - sysctl -w net.ipv6.conf.lo.disable_ipv6=0
+  build:
+    commands:
+#      # Try using IPv4 explicitly for localhost
+#      - export HOST_IP=127.0.0.1
+#      # If your application uses specific env vars for host configuration, set those
+#      - export HOSTNAME=127.0.0.1
+#      # You might also need
+#      - export HOST=127.0.0.1
+#
+#      # Check kernel IPv6 settings
+##      - apt-get update && apt-get -y --no-install-recommends upgrade && apt-get -y --no-install-recommends install netcat dnsutils
+#      - echo "=== Kernel IPv6 Settings ==="
+#      - sysctl net.ipv6.conf.all.disable_ipv6
+#      - sysctl net.ipv6.conf.default.disable_ipv6
+#
+#      # Check network interfaces for IPv6
+#      - echo "=== Network Interfaces ==="
+#      - ip addr | grep inet6 || true
+#
+#      # Check IPv6 routing
+#      - echo "=== IPv6 Routes ==="
+#      - ip route
+#      - ip -6 route
+#
+#      # Test IPv6 connectivity
+#      - echo "=== IPv6 Connectivity Tests ==="
+#      - curl -I google.com || echo "IPv4 curl failed"
+#      - ping6 -c 3 2001:4860:4860::8888 || echo "Google IPv6 DNS ping failed"
+#      - curl -6 -I ipv6.google.com || echo "IPv6 curl failed"
+#
+#      # Check DNS resolution
+#      - echo "=== DNS IPv6 Resolution ==="
+#      - dig AAAA google.com
+#
+#      # Check if common IPv6 ports are listening
+#      - echo "=== IPv6 Listening Ports ==="
+#      - netstat -tulpn
+#      - netstat -tulpn | grep -i ":::"
+#
+#      # Check if socket can be created
+#      - echo "=== Testing socket creation ==="
+#      - timeout 5 nc -6 -l 3000 & echo "Socket created on port 3000 with ipv6" && sleep 1 && pkill nc
+#      - timeout 5 nc -l 127.0.0.1 32766 & echo "Socket created on port 32766 at 127.0.0.1" && sleep 1 && pkill nc
+#      - netstat -an | grep 32766 || echo "No socket created on port 32766"
+#      - lsof -i :32766 || echo "Found nothing for port 32766"
+#
+#      # Check configured addresses
+#      - echo "=== Testing socket creation ==="
+#      - ip addr show
+#      - ip -6 addr show
+#      - ifconfig
+
+      #      # Docker IPv6 configuration
+#      - echo "=== Docker IPv6 Config ==="
+#      - cat /etc/docker/daemon.json || echo "No Docker daemon config file"
+#      - docker info | grep -i ipv6
+      - codebuild-breakpoint
+      - "./${AWS_LC_CI_TARGET}"

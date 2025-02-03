@@ -59,7 +59,7 @@ class LinuxDockerImageBatchBuildStack(Stack):
             environment=codebuild.BuildEnvironment(
                 compute_type=codebuild.ComputeType.SMALL,
                 privileged=False,
-                build_image=codebuild.LinuxBuildImage.STANDARD_4_0),
+                build_image=codebuild.LinuxBuildImage.STANDARD_6_0),
             environment_variables=environment_variables,
             role=role,
             timeout=Duration.minutes(180),

@@ -18,7 +18,7 @@ source tests/ci/common_posix_setup.sh
 #    - GRPC_BUILD_FOLDER
 
 # Assumes script is executed from the root of aws-lc directory
-SCRATCH_FOLDER="${SYS_ROOT}/GRPC_BUILD_ROOT"
+SCRATCH_FOLDER="${SRC_ROOT}/GRPC_BUILD_ROOT"
 GRPC_SRC_FOLDER="${SCRATCH_FOLDER}/grpc"
 GRPC_BUILD_FOLDER="${SCRATCH_FOLDER}/grpc/cmake/build"
 AWS_LC_BUILD_FOLDER="${SCRATCH_FOLDER}/aws-lc-build"
@@ -44,7 +44,8 @@ time ninja $grpc_tests
 
 # grpc tests expect to use relative paths to certificates and test files
 cd "${GRPC_SRC_FOLDER}"
-python3 tools/run_tests/start_port_server.py
+python3 -c "from tools.run_tests.python_utils.start_port_server import start_port_server; start_port_server(verbose=True)"
+#python3 tools/run_tests/start_port_server.py
 for test in $grpc_tests; do
     "./cmake/build/${test}"
 done
