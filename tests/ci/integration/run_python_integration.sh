@@ -79,7 +79,8 @@ function python_run_tests() {
         test_urllib2_localnet \
         test_xmlrpc \
     "
-    make -j ${NUM_CPU_THREADS} test TESTOPTS="${TEST_OPTS}"
+    TESTTIMEOUT=120
+    make -j ${NUM_CPU_THREADS} test TESTOPTS="${TEST_OPTS}" TESTTIMEOUT=${TESTTIMEOUT}
     popd
 }
 
@@ -191,7 +192,7 @@ function python_patch() {
       echo "Apply patch ${patchfile}..."
       cat ${patchfile} \
           | sed -e "s|AWS_LC_INSTALL_PLACEHOLDER|${AWS_LC_INSTALL_FOLDER}|g" \
-          | patch -p1 --quiet -d ${src_dir}
+          | patch -p1 --force -d ${src_dir}
     done
 }
 
