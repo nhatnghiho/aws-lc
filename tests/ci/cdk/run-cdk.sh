@@ -4,6 +4,8 @@
 
 set -exuo pipefail
 
+source pipeline/scripts/util.sh
+
 # -e: Exit on any failure
 # -x: Print the command before running
 # -u: Any variable that is not set will cause an error if used
@@ -14,11 +16,11 @@ function delete_s3_buckets() {
   aws s3api list-buckets --query "Buckets[].Name" | jq '.[]' | while read -r i; do
     bucket_name=$(echo "${i}" | tr -d '"')
     # Delete the bucket if its name uses AWS_LC_S3_BUCKET_PREFIX.
-    if [[ "${bucket_name}" == *"${AWS_LC_S3_BUCKET_PREFIX}"* ]]; then
-      aws s3 rm "s3://${bucket_name}" --recursive
-      aws s3api delete-bucket --bucket "${bucket_name}"
+#    if [[ "${bucket_name}" == *"${AWS_LC_S3_BUCKET_PREFIX}"* ]]; then
+#      aws s3 rm "s3://${bucket_name}" --recursive
+#      aws s3api delete-bucket --bucket "${bucket_name}"
     # Delete bm-framework buckets if we're not on the team account
-    elif [[ "${CDK_DEPLOY_ACCOUNT}" != "620771051181" ]] && [[ "${bucket_name}" == *"${aws-lc-ci-bm-framework}"* ]]; then
+    if [[ "${CDK_DEPLOY_ACCOUNT}" != "620771051181" ]] && [[ "${bucket_name}" == *"${aws-lc-ci-bm-framework}"* ]]; then
       aws s3 rm "s3://${bucket_name}" --recursive
       aws s3api delete-bucket --bucket "${bucket_name}"
     fi
@@ -62,8 +64,6 @@ function destroy_docker_img_build_stack() {
 }
 
 function create_linux_docker_img_build_stack() {
-  # Clean up build stacks if exists.
-  destroy_docker_img_build_stack
   # Deploy aws-lc ci stacks.
   # When repeatedly deploy, error 'EIP failed Reason: Maximum number of addresses has been reached' can happen.
   #
@@ -74,8 +74,6 @@ function create_linux_docker_img_build_stack() {
 }
 
 function create_win_docker_img_build_stack() {
-  # Clean up build stacks if exists.
-  destroy_docker_img_build_stack
   # Deploy aws-lc ci stacks.
   # When repeatedly deploy, error 'EIP failed Reason: Maximum number of addresses has been reached' can happen.
   #
@@ -97,8 +95,8 @@ function run_linux_img_build() {
 
 function run_windows_img_build() {
   # EC2 takes several minutes to be ready for running command.
-  echo "Wait 3 min for EC2 ready for SSM command execution."
-  sleep 180
+#  echo "Wait 3 min for EC2 ready for SSM command execution."
+#  sleep 180
 
   # Run commands on windows EC2 instance to build windows docker images.
   for i in {1..60}; do
@@ -116,7 +114,9 @@ function run_windows_img_build() {
         --instance-ids "${instance_id}" \
         --document-name "${WIN_DOCKER_BUILD_SSM_DOCUMENT}" \
         --output-s3-bucket-name "${S3_FOR_WIN_DOCKER_IMG_BUILD}" \
-        --output-s3-key-prefix 'runcommand' | jq -r '.Command.CommandId')
+        --output-s3-key-prefix 'runcommand' \
+        --parameters "TriggerType=[\"pipeline\"]" | \
+        jq -r '.Command.CommandId')
       # Export for checking command run status.
       export WINDOWS_DOCKER_IMG_BUILD_COMMAND_ID="${command_id}"
       echo "Windows ec2 is executing SSM command."
@@ -178,7 +178,7 @@ function win_docker_img_build_status_check() {
 
 function build_linux_docker_images() {
   # Always destroy docker build stacks (which include EC2 instance) on EXIT.
-  trap destroy_docker_img_build_stack EXIT
+#  trap destroy_docker_img_build_stack EXIT
 
   # Create/update aws-ecr repo.
   cdk deploy 'aws-lc-ecr-linux-*' --require-approval never
@@ -196,13 +196,18 @@ function build_linux_docker_images() {
 
 function build_win_docker_images() {
  # Always destroy docker build stacks (which include EC2 instance) on EXIT.
- trap destroy_docker_img_build_stack EXIT
+# trap destroy_docker_img_build_stack EXIT
 
  # Create/update aws-ecr repo.
  cdk deploy 'aws-lc-ecr-windows-*' --require-approval never
 
  # Create aws windows build stack
  create_win_docker_img_build_stack
+
+ S3_FOR_WIN_DOCKER_IMG_BUILD=$(aws cloudformation describe-stack-resources \
+                                        --stack-name aws-lc-docker-image-build-windows  \
+                                        --query "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" \
+                                        --output text)
 
  echo "Executing AWS SSM commands to build Windows docker images."
  run_windows_img_build
@@ -307,8 +312,10 @@ function export_global_variables() {
   export AWS_LC_S3_BUCKET_PREFIX='aws-lc-windows-docker-image-build-s3'
   export S3_FOR_WIN_DOCKER_IMG_BUILD="${AWS_LC_S3_BUCKET_PREFIX}-${DATE_NOW}"
   export WIN_EC2_TAG_KEY='aws-lc'
-  export WIN_EC2_TAG_VALUE="aws-lc-windows-docker-image-build-${DATE_NOW}"
-  export WIN_DOCKER_BUILD_SSM_DOCUMENT="windows-ssm-document-${DATE_NOW}"
+#  export WIN_EC2_TAG_VALUE="aws-lc-windows-docker-image-build-${DATE_NOW}"
+  export WIN_EC2_TAG_VALUE="aws-lc-windows-docker-image-build"
+#  export WIN_DOCKER_BUILD_SSM_DOCUMENT="AWSLC-BuildWindowsDockerImages-${DATE_NOW}"
+  export WIN_DOCKER_BUILD_SSM_DOCUMENT="AWSLC-BuildWindowsDockerImages"
   export IMG_BUILD_STATUS='unknown'
   # 620771051181 is AWS-LC team AWS account.
   if [[ "${CDK_DEPLOY_ACCOUNT}" != "620771051181" ]] && [[ "${GITHUB_REPO_OWNER}" == 'aws' ]]; then
@@ -344,6 +351,10 @@ function main() {
       ;;
     --action)
       export ACTION="${2}"
+      shift
+      ;;
+    --command)
+      COMMAND="${2}"
       shift
       ;;
     *)
@@ -388,13 +399,16 @@ function main() {
     build_win_docker_images
     ;;
   synth)
-    cdk synth 'aws-lc-ci-*'
+    cdk synth '*'
     ;;
   diff)
     cdk diff aws-lc-ci-*
     ;;
   bootstrap)
     cdk bootstrap
+    ;;
+  invoke)
+    ${COMMAND:?}
     ;;
   *)
     echo "--action is required. Use '--help' to see allowed actions."
