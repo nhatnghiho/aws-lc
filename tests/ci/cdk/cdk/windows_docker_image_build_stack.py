@@ -10,6 +10,8 @@ from aws_cdk import (
     aws_ssm as ssm,
 )
 from constructs import Construct
+
+from cdk.docker_ecr_construct import DockerEcrConstruct
 from util.iam_policies import (
     ecr_power_user_policy_in_json,
     s3_read_write_policy_in_json,
@@ -34,7 +36,15 @@ class WindowsDockerImageBuildStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
+        # ecr_windows_x86 = DockerEcrConstruct(
+        #     self,
+        #     "aws-lc-ecr-windows-x86",
+        #     WINDOWS_X86_ECR_REPO,
+        #     env=kwargs["env"],
+        # )
+
         # Define SSM command document.
+        # ecr_uri = ecr_windows_x86.ecr_repo.repository_uri
         ecr_repo = "{}.dkr.ecr.{}.amazonaws.com/{}".format(
             AWS_ACCOUNT, AWS_REGION, WINDOWS_X86_ECR_REPO
         )

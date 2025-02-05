@@ -346,6 +346,10 @@ function main() {
       export ACTION="${2}"
       shift
       ;;
+    --command)
+      COMMAND="${2}"
+      shift
+      ;;
     *)
       echo "${1} is not supported."
       exit 1
@@ -388,13 +392,16 @@ function main() {
     build_win_docker_images
     ;;
   synth)
-    cdk synth 'aws-lc-ci-*'
+    cdk synth '*'
     ;;
   diff)
     cdk diff aws-lc-ci-*
     ;;
   bootstrap)
     cdk bootstrap
+    ;;
+  invoke)
+    ${COMMAND:?}
     ;;
   *)
     echo "--action is required. Use '--help' to see allowed actions."

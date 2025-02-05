@@ -12,6 +12,7 @@ from cdk.aws_lc_github_ci_stack import AwsLcGitHubCIStack
 from cdk.aws_lc_github_fuzz_ci_stack import  AwsLcGitHubFuzzCIStack
 from cdk.aws_lc_ec2_test_framework_ci_stack import AwsLcEC2TestingCIStack
 from cdk.linux_docker_image_batch_build_stack import LinuxDockerImageBatchBuildStack
+from cdk.pipeline_stack import AwsLcCiPipeline
 from cdk.windows_docker_image_build_stack import WindowsDockerImageBuildStack
 from cdk.ecr_stack import EcrStack
 from util.metadata import AWS_ACCOUNT, AWS_REGION, LINUX_X86_ECR_REPO, LINUX_AARCH_ECR_REPO, WINDOWS_X86_ECR_REPO
@@ -22,11 +23,7 @@ app = App()
 # Initialize env.
 env = Environment(account=AWS_ACCOUNT, region=AWS_REGION)
 
-# Define AWS ECR stacks.
-# ECR holds the docker images, which are pre-built to accelerate the code builds/tests of git pull requests.
-EcrStack(app, "aws-lc-ecr-linux-x86", LINUX_X86_ECR_REPO, env=env)
-EcrStack(app, "aws-lc-ecr-linux-aarch", LINUX_AARCH_ECR_REPO, env=env)
-EcrStack(app, "aws-lc-ecr-windows-x86", WINDOWS_X86_ECR_REPO, env=env)
+AwsLcCiPipeline(app, "AwsLcCiPipeline", env=env)
 
 # Define CodeBuild Batch job for building Docker images.
 LinuxDockerImageBatchBuildStack(app, "aws-lc-docker-image-build-linux", env=env)

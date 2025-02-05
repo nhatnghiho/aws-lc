@@ -4,8 +4,15 @@
 from aws_cdk import Duration, Stack, aws_codebuild as codebuild, aws_iam as iam, aws_ec2 as ec2
 from constructs import Construct
 
-from util.metadata import AWS_ACCOUNT, GITHUB_REPO_OWNER, GITHUB_REPO_NAME, GITHUB_SOURCE_VERSION, LINUX_AARCH_ECR_REPO, \
+from cdk.docker_ecr_construct import DockerEcrConstruct
+from util.metadata import (
+    AWS_ACCOUNT,
+    GITHUB_REPO_OWNER,
+    GITHUB_REPO_NAME,
+    GITHUB_SOURCE_VERSION,
+    LINUX_AARCH_ECR_REPO,
     LINUX_X86_ECR_REPO
+)
 from util.iam_policies import code_build_batch_policy_in_json, ecr_power_user_policy_in_json
 from util.yml_loader import YmlLoader
 
@@ -15,6 +22,20 @@ class LinuxDockerImageBatchBuildStack(Stack):
 
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
+
+        # ecr_linux_x86 = DockerEcrConstruct(
+        #     self,
+        #     "aws-lc-ecr-linux-x86",
+        #     LINUX_X86_ECR_REPO,
+        #     env=kwargs["env"],
+        # )
+        #
+        # ecr_linux_aarch = DockerEcrConstruct(
+        #     self,
+        #     "aws-lc-ecr-linux-aarch",
+        #     LINUX_AARCH_ECR_REPO,
+        #     env=kwargs["env"],
+        # )
 
         # Define CodeBuild resource.
         git_hub_source = codebuild.Source.git_hub(
