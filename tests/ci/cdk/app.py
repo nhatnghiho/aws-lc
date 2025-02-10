@@ -15,7 +15,8 @@ from cdk.linux_docker_image_batch_build_stack import LinuxDockerImageBatchBuildS
 from cdk.pipeline_stack import AwsLcCiPipeline
 from cdk.windows_docker_image_build_stack import WindowsDockerImageBuildStack
 from cdk.ecr_stack import EcrStack
-from util.metadata import AWS_ACCOUNT, AWS_REGION, LINUX_X86_ECR_REPO, LINUX_AARCH_ECR_REPO, WINDOWS_X86_ECR_REPO
+from util.metadata import AWS_ACCOUNT, AWS_REGION, LINUX_X86_ECR_REPO, LINUX_AARCH_ECR_REPO, WINDOWS_X86_ECR_REPO, \
+    PIPELINE_ACCOUNT, PIPELINE_REGION
 
 # Initialize app.
 app = App()
@@ -23,7 +24,7 @@ app = App()
 # Initialize env.
 env = Environment(account=AWS_ACCOUNT, region=AWS_REGION)
 
-AwsLcCiPipeline(app, "AwsLcCiPipeline", env=env)
+AwsLcCiPipeline(app, "AwsLcCiPipeline", env=Environment(account=PIPELINE_ACCOUNT, region=PIPELINE_REGION))
 
 # Define CodeBuild Batch job for building Docker images.
 LinuxDockerImageBatchBuildStack(app, "aws-lc-docker-image-build-linux", env=env)

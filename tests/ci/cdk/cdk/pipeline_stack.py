@@ -16,7 +16,7 @@ from util.metadata import (
     AWS_REGION,
     GITHUB_REPO_NAME,
     GITHUB_REPO_OWNER,
-    GITHUB_SOURCE_VERSION,
+    GITHUB_SOURCE_VERSION, PIPELINE_ACCOUNT, PIPELINE_REGION,
 )
 
 from aws_cdk.aws_codepipeline_actions import ManualApprovalAction
@@ -42,9 +42,21 @@ class AwsLcCiPipeline(Stack):
             provider_type="GitHub",
         )
 
+        cross_account_role = iam.Role(
+            self,
+            "CrossAccountCodeBuildRole",
+            role_name="CrossAccountCodeBuildRole",
+            assumed_by=iam.CompositePrincipal(
+                iam.ServicePrincipal("codepipeline.amazonaws.com"),
+                iam.ServicePrincipal("codebuild.amazonaws.com")
+            )
+        )
+
         pipeline = pipelines.CodePipeline(
             self,
-            "Pipeline",
+            "aws-lc-ci-pipeline",
+            pipeline_name="aws-lc-ci-pipeline",
+            cross_account_keys=True,
             synth=pipelines.ShellStep(
                 "Synth",
                 input=pipelines.CodePipelineSource.connection(
@@ -67,6 +79,8 @@ class AwsLcCiPipeline(Stack):
                     "GITHUB_REPO_OWNER": GITHUB_REPO_OWNER,
                     "GITHUB_REPO_NAME": GITHUB_REPO_NAME,
                     "GITHUB_SOURCE_VERSION": GITHUB_SOURCE_VERSION,
+                    "PIPELINE_ACCOUNT": PIPELINE_ACCOUNT,
+                    "PIPELINE_REGION": PIPELINE_REGION
                 },
                 primary_output_directory="tests/ci/cdk/cdk.out",
             ),
@@ -82,7 +96,7 @@ class AwsLcCiPipeline(Stack):
                                 "iam:ResourceTag/aws-cdk:bootstrap-role": "lookup",
                             }
                         }
-                    )
+                    ),
                 ]
             )
         )
@@ -90,20 +104,32 @@ class AwsLcCiPipeline(Stack):
         docker_image_build_stage = DockerImageBuildStage(
             self,
             "Staging-DockerImageBuild",
-            env=Environment(account=AWS_ACCOUNT, region=AWS_REGION)
+            env=Environment(account=PIPELINE_ACCOUNT, region=PIPELINE_REGION)
         )
 
         pipeline.add_stage(
             docker_image_build_stage,
             post=[
-                ShellStep(
+                CodeBuildStep(
                     "StartDockerBuild",
                     commands=[
                         # "build_id=$(aws codebuild start-build-batch --project-name aws-lc-docker-image-build-linux | jq -r '.buildBatch.id')",
                         # "export AWS_LC_LINUX_BUILD_BATCH_ID='${build_id}'"
                         "echo \"Environment variables:\"",
-                        "env"
+                        "env",
+                        "aws --region \"${AWS_REGION}\" codebuild start-build-batch --project-name aws-lc-docker-image-build-linux --query 'build.id' --output text",
                     ],
+                    # env={
+                    #     "STACKS": docker_image_build_stage.stacks,
+                    # },
+                    role=cross_account_role,
+                    # role_policy_statements=[
+                    #     iam.PolicyStatement(
+                    #         effect=iam.Effect.ALLOW,
+                    #         resources=[cross_account_role.role_arn],
+                    #         actions=["sts:AssumeRole"],
+                    #     )
+                    # ]
                 ),
             ]
         )
