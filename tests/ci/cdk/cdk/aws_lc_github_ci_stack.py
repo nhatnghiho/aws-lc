@@ -66,6 +66,11 @@ class AwsLcGitHubCIStack(Stack):
             )
         )
 
+        # test = iam.Role(scope=self,
+        #                 id="test",
+        #                 assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
+        #                 inline_policies=inline_policies)
+
         # Define CodeBuild.
         project = codebuild.Project(
             scope=self,

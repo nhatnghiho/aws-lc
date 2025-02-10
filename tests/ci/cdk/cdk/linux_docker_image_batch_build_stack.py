@@ -11,7 +11,7 @@ from util.metadata import (
     GITHUB_REPO_NAME,
     GITHUB_SOURCE_VERSION,
     LINUX_AARCH_ECR_REPO,
-    LINUX_X86_ECR_REPO
+    LINUX_X86_ECR_REPO, PIPELINE_ACCOUNT
 )
 from util.iam_policies import code_build_batch_policy_in_json, ecr_power_user_policy_in_json
 from util.yml_loader import YmlLoader
