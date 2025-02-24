@@ -57,7 +57,7 @@
 
 #include <openssl/err.h>
 
-#include "../../pqdsa/internal.h"
+#include "../pqdsa/internal.h"
 #include "../delocate.h"
 #include "../digest/internal.h"
 #include "internal.h"
@@ -362,4 +362,16 @@ void EVP_MD_CTX_set_pkey_ctx(EVP_MD_CTX *ctx, EVP_PKEY_CTX *pctx) {
     // if |pctx| is null, we remove the flag.
     ctx->flags &= ~EVP_MD_CTX_FLAG_KEEP_PKEY_CTX;
   }
+}
+
+EVP_PKEY_CTX *EVP_MD_CTX_get_pkey_ctx(const EVP_MD_CTX *ctx) {
+  SET_DIT_AUTO_RESET;
+  if(ctx == NULL) {
+    return NULL;
+  }
+  return ctx->pctx;
+}
+
+EVP_PKEY_CTX *EVP_MD_CTX_pkey_ctx(const EVP_MD_CTX *ctx) {
+  return EVP_MD_CTX_get_pkey_ctx(ctx);
 }
