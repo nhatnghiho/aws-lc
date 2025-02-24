@@ -11,6 +11,7 @@ from aws_cdk import (
 from aws_cdk.pipelines import CodeBuildStep, ShellStep
 from constructs import Construct
 
+from cdk.ci_stage import CiStage
 from cdk.docker_image_build_stage import DockerImageBuildStage
 from util.metadata import (
     AWS_ACCOUNT,
@@ -83,7 +84,7 @@ class AwsLcCiPipeline(Stack):
                     "python -m pip install -r requirements.txt",
                     "cd cdk",
                     "cdk synth",
-                    "git diff-tree --no-commit-id --name-only -r ${COMMIT_HASH}"
+                    # "git diff-tree --no-commit-id --name-only -r ${COMMIT_HASH}"
                 ],
                 env={
                     "CDK_DEPLOY_ACCOUNT": AWS_ACCOUNT,
@@ -147,11 +148,31 @@ class AwsLcCiPipeline(Stack):
                         'export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId)',
                         'export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey)',
                         'export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken)',
-                        "aws --region ${PRE_PROD_REGION} codebuild start-build-batch --project-name aws-lc-docker-image-build-linux --query 'build.id' --output text",
+                        # "aws --region ${PRE_PROD_REGION} codebuild start-build-batch --project-name aws-lc-docker-image-build-linux --query 'build.id' --output text",
                     ],
                     # env={
                     #     "STACKS": docker_image_build_stage.stacks,
                     # },
+                    role=cross_account_role
+                ),
+            ]
+        )
+
+        ci_stage = CiStage(
+            self,
+            "Staging-CiStage",
+            env=Environment(account=PIPELINE_ACCOUNT, region=PIPELINE_REGION)
+        )
+
+        pipeline.add_stage(
+            ci_stage,
+            post=[
+                ShellStep(
+                    "RunIntegrationTests",
+                    commands=[
+                        "echo \"Environment variables:\"",
+                        "env",
+                    ],
                     role=cross_account_role
                 ),
             ]
