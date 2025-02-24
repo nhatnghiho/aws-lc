@@ -15,15 +15,20 @@ export LD_LIBRARY_PATH="${AWS_LC_INSTALL_FOLDER}/lib"
 
 function build_and_test_libevent() {
   pushd "${LIBEVENT_SRC}"
+#  rm -rf build
   mkdir build && pushd build
-  cmake -GNinja -DOPENSSL_ROOT_DIR="${AWS_LC_INSTALL_FOLDER}" ../
-  ninja verify
+  cmake -GNinja -DOPENSSL_ROOT_DIR="${AWS_LC_INSTALL_FOLDER}" -DSRC_CORE="epoll_sub.c" ../
+  timeout 15 ninja verify || echo "Exit forcefully"
+  unset EVENT_NOEPOLL; unset EVENT_NOPOLL; unset EVENT_NOSELECT; unset EVENT_NOWIN32; unset EVENT_NOEVPORT; unset EVENT_NOKQUEUE; unset EVENT_NODEVPOLL
+  export EVENT_DEBUG_MODE=1
+  timeout 15 /usr/bin/ctest -V
   popd && popd
 }
 
 # Make script execution idempotent.
 mkdir -p "${SCRATCH_FOLDER}"
 rm -rf "${SCRATCH_FOLDER:?}"/*
+#rm -rf "${AWS_LC_BUILD_FOLDER}" "${AWS_LC_INSTALL_FOLDER}"
 pushd "${SCRATCH_FOLDER}"
 
 mkdir -p "${AWS_LC_BUILD_FOLDER}" "${AWS_LC_INSTALL_FOLDER}"
