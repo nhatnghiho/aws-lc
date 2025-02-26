@@ -80,7 +80,7 @@ Deploy pipeline
 ```
 GITHUB_REPO_OWNER=nhatnghiho
 GITHUB_SOURCE_VERSION=ci-pipeline
-./run-cdk.sh --github-repo-owner ${GITHUB_REPO_OWNER} --action invoke --command "cdk deploy AwsLcCiPipeline --require-approval never" --aws-account ${AWS_ACCOUNT_ID}
+./run-cdk.sh --github-repo-owner ${GITHUB_REPO_OWNER} --aws-account ${AWS_ACCOUNT_ID} --action invoke --command "cdk deploy AwsLcCiPipeline --require-approval never"
 ```
 
 ### Commands

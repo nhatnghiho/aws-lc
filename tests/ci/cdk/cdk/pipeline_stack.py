@@ -6,13 +6,20 @@ from aws_cdk import (
     pipelines,
     aws_codestarconnections as codestarconnections,
     aws_codebuild as codebuild,
+    aws_codepipeline as codepipeline,
     aws_iam as iam,
+    aws_events as events,
+    aws_events_targets as targets,
 )
-from aws_cdk.pipelines import CodeBuildStep, ShellStep
+from aws_cdk.aws_s3_assets import Asset
+from aws_cdk.pipelines import CodeBuildStep
 from constructs import Construct
 
-from cdk.ci_stage import CiStage
-from cdk.docker_image_build_stage import DockerImageBuildStage
+from cdk.pipeline.ci_stage import CiStage
+from cdk.pipeline.codebuild_run_step import CodeBuildRunStep
+from cdk.pipeline.linux_build_test_stage import LinuxBuildTestStage
+from cdk.pipeline.setup_stage import SetupStage
+from cdk.pipeline.windows_build_test_stage import WindowsBuildTestStage
 from util.metadata import (
     AWS_ACCOUNT,
     AWS_REGION,
@@ -20,8 +27,6 @@ from util.metadata import (
     GITHUB_REPO_OWNER,
     GITHUB_SOURCE_VERSION, PIPELINE_ACCOUNT, PIPELINE_REGION,
 )
-
-from aws_cdk.aws_codepipeline_actions import ManualApprovalAction
 
 
 class AwsLcCiPipeline(Stack):
@@ -48,7 +53,10 @@ class AwsLcCiPipeline(Stack):
             self,
             "CrossAccountCodeBuildRole",
             role_name="CrossAccountCodeBuildRole",
-            assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com")
+            assumed_by=iam.CompositePrincipal(
+                iam.ServicePrincipal("codebuild.amazonaws.com"),
+                iam.ServicePrincipal("codepipeline.amazonaws.com")
+            ),
         )
 
         cross_account_role.add_to_policy(
@@ -56,6 +64,14 @@ class AwsLcCiPipeline(Stack):
                 effect=iam.Effect.ALLOW,
                 resources=[f'arn:aws:iam::{AWS_ACCOUNT}:role/CrossAccountCodeBuildRole'],
                 actions=["sts:AssumeRole"],
+            )
+        )
+
+        cross_account_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                resources=['*'],
+                actions=["codepipeline:GetPipelineExecution"],
             )
         )
 
@@ -68,11 +84,20 @@ class AwsLcCiPipeline(Stack):
 
         commit_hash = source.source_attribute("CommitId")
 
+        # Creating a base pipeline to override the default execution mode
+        code_pipeline = codepipeline.Pipeline(
+            self,
+            "BasePipeline",
+            execution_mode=codepipeline.ExecutionMode.QUEUED,
+            pipeline_type=codepipeline.PipelineType.V2,
+            pipeline_name="AwsLcCiPipeline",
+            cross_account_keys=True
+        )
+
         pipeline = pipelines.CodePipeline(
             self,
-            "aws-lc-ci-pipeline",
-            pipeline_name="aws-lc-ci-pipeline",
-            cross_account_keys=True,
+            "AwsLcCiPipeline",
+            code_pipeline=code_pipeline,
             synth=pipelines.ShellStep(
                 "Synth",
                 input=source,
@@ -83,8 +108,7 @@ class AwsLcCiPipeline(Stack):
                     "cd tests/ci",
                     "python -m pip install -r requirements.txt",
                     "cd cdk",
-                    "cdk synth",
-                    # "git diff-tree --no-commit-id --name-only -r ${COMMIT_HASH}"
+                    "cdk synth"
                 ],
                 env={
                     "CDK_DEPLOY_ACCOUNT": AWS_ACCOUNT,
@@ -96,7 +120,7 @@ class AwsLcCiPipeline(Stack):
                     "PIPELINE_REGION": PIPELINE_REGION,
                     "PRE_PROD_ACCOUNT": AWS_ACCOUNT,
                     "PRE_PROD_REGION": AWS_REGION,
-                    "COMMIT_HASH": commit_hash,
+                    "COMMIT_HASH": commit_hash
                 },
                 primary_output_directory="tests/ci/cdk/cdk.out",
             ),
@@ -128,53 +152,220 @@ class AwsLcCiPipeline(Stack):
             )
         )
 
-        docker_image_build_stage = DockerImageBuildStage(
+        setup_stage = SetupStage(
             self,
-            "Staging-DockerImageBuild",
+            "Setup",
             env=Environment(account=PIPELINE_ACCOUNT, region=PIPELINE_REGION)
         )
 
-        pipeline.add_stage(
-            docker_image_build_stage,
+        # pipeline.add_stage(setup_stage)
+
+        test_step = pipelines.CodeBuildStep(
+            "TestStep",
+            commands=[
+                # "build_id=$(aws codebuild start-build-batch --project-name aws-lc-docker-image-build-linux | jq -r '.buildBatch.id')",
+                # "export AWS_LC_LINUX_BUILD_BATCH_ID='${build_id}'"
+                "env",
+            ],
+            input=source,
+            env={
+                # "STACKS": docker_image_build_stage.stacks,
+                "COMMIT_HASH": commit_hash
+            },
+            role=cross_account_role
+        )
+
+        test_step_2 = pipelines.CodeBuildStep(
+            "TestStep2",
+            commands=[
+                # "build_id=$(aws codebuild start-build-batch --project-name aws-lc-docker-image-build-linux | jq -r '.buildBatch.id')",
+                # "export AWS_LC_LINUX_BUILD_BATCH_ID='${build_id}'"
+                "env",
+            ],
+            input=source,
+            env={
+                # "STACKS": docker_image_build_stage.stacks,
+                "COMMIT_HASH": commit_hash
+            },
+            role=cross_account_role
+        )
+
+        test_wave = pipeline.add_wave("TestWave")
+        test_wave.add_stage(
+            setup_stage,
+            post=[test_step]
+        )
+
+        linux_stage = LinuxBuildTestStage(
+            self,
+            "Staging-LinuxBuildTest",
+            env=Environment(account=PIPELINE_ACCOUNT, region=PIPELINE_REGION)
+        )
+
+        # linux_stage.add_stage_to_wave(
+        #     wave=test_wave,
+        #     input=source.primary_output,
+        #     role=cross_account_role,
+        #     name_prefix="Staging",
+        #     env={
+        #         "PIPELINE_EXECUTION_ID": "#{codepipeline.PipelineExecutionId}",
+        #         "COMMIT_HASH": commit_hash,
+        #         "DEPLOY_ACCOUNT": AWS_ACCOUNT,
+        #         "DEPLOY_REGION": AWS_REGION
+        #     },
+        # )
+
+        # test_step.add_step_dependency(linux_stage.step)
+
+        name_prefix = "Staging"
+
+        step = CodeBuildRunStep(
+            f"{name_prefix}-CiTest",
+            input=source.primary_output,
+            name_prefix=f"{name_prefix}-CiTest",
+            stacks=[stack.stack_name for stack in linux_stage.ci_stacks],
+            build_projects=[stack.stack_name for stack in linux_stage.ci_stacks],
+            build_type="docker",
+            platform="linux",
+            env={
+                "PIPELINE_EXECUTION_ID": "#{codepipeline.PipelineExecutionId}",
+                "COMMIT_HASH": commit_hash,
+                "DEPLOY_ACCOUNT": AWS_ACCOUNT,
+                "DEPLOY_REGION": AWS_REGION
+            },
+            role=cross_account_role
+        )
+
+        test_wave.add_stage(
+            linux_stage,
+            # stack_steps=[
+            #     pipelines.StackSteps(
+            #         stack = linux_stage.linux_docker_build_stack,
+            #         post=[
+            #             CodeBuildRunStep(
+            #                 f"{name_prefix}-LinuxDockerBuild",
+            #                 input=source.primary_output,
+            #                 name_prefix=f"{name_prefix}-LinuxDockerBuild",
+            #                 stacks=[stack.stack_name for stack in linux_stage.docker_stacks],
+            #                 build_projects=["aws-lc-docker-image-build-linux"],
+            #                 build_type="docker",
+            #                 platform="linux",
+            #                 env={
+            #                     "PIPELINE_EXECUTION_ID": "#{codepipeline.PipelineExecutionId}",
+            #                     "COMMIT_HASH": commit_hash,
+            #                     "DEPLOY_ACCOUNT": AWS_ACCOUNT,
+            #                     "DEPLOY_REGION": AWS_REGION
+            #                 },
+            #                 role=cross_account_role
+            #             )
+            #         ]
+            #     ),
+            # ],
             post=[
-                CodeBuildStep(
-                    "StartDockerBuild",
-                    commands=[
-                        # "build_id=$(aws codebuild start-build-batch --project-name aws-lc-docker-image-build-linux | jq -r '.buildBatch.id')",
-                        # "export AWS_LC_LINUX_BUILD_BATCH_ID='${build_id}'"
-                        "echo \"Environment variables:\"",
-                        "env",
-                        'CREDENTIALS=$(aws sts assume-role --role-arn \"arn:aws:iam::${PRE_PROD_ACCOUNT}:role/CrossAccountCodeBuildRole\" --role-session-name codebuild-session)',
-                        'export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId)',
-                        'export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey)',
-                        'export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken)',
-                        # "aws --region ${PRE_PROD_REGION} codebuild start-build-batch --project-name aws-lc-docker-image-build-linux --query 'build.id' --output text",
-                    ],
-                    # env={
-                    #     "STACKS": docker_image_build_stage.stacks,
-                    # },
-                    role=cross_account_role
-                ),
+                test_step_2
             ]
         )
 
-        ci_stage = CiStage(
+        test_step.add_step_dependency(test_step_2)
+
+        windows_stage = WindowsBuildTestStage(
             self,
-            "Staging-CiStage",
+            "Staging-WindowsBuildTest",
             env=Environment(account=PIPELINE_ACCOUNT, region=PIPELINE_REGION)
         )
 
-        pipeline.add_stage(
-            ci_stage,
-            post=[
-                ShellStep(
-                    "RunIntegrationTests",
-                    commands=[
-                        "echo \"Environment variables:\"",
-                        "env",
-                    ],
-                    role=cross_account_role
-                ),
+        test_wave.add_stage(windows_stage)
+
+        # pipeline.add_stage(
+        #     linux_stage,
+        #     post=[
+        #         # CodeBuildStep(
+        #         #     "StartDockerBuild",
+        #         #     commands=[
+        #         #         # "build_id=$(aws codebuild start-build-batch --project-name aws-lc-docker-image-build-linux | jq -r '.buildBatch.id')",
+        #         #         # "export AWS_LC_LINUX_BUILD_BATCH_ID='${build_id}'"
+        #         #         "ls",
+        #         #         "pwd",
+        #         #         "cd tests/ci/cdk/cdk/scripts",
+        #         #         "chmod +x codebuild_start_wait.sh",
+        #         #         f"./codebuild_start_wait.sh --stacks \"{' '.join(docker_image_build_stage.stacks)}\""
+        #         #     ],
+        #         #     input=source,
+        #         #     env={
+        #         #         # "STACKS": docker_image_build_stage.stacks,
+        #         #         "COMMIT_HASH": commit_hash
+        #         #     },
+        #         #     role=cross_account_role
+        #         # ),
+        #         CodeBuildRunStep(
+        #             "StartDockerBuild",
+        #             input=source,
+        #             name_prefix="Staging",
+        #             stacks=linux_stage.stacks,
+        #             build_projects=["aws-lc-docker-image-build-linux"],
+        #             build_type="docker",
+        #             platform="linux",
+        #             env={
+        #                 "PIPELINE_EXECUTION_ID": "#{codepipeline.PipelineExecutionId}",
+        #                 "COMMIT_HASH": commit_hash,
+        #                 "DEPLOY_ACCOUNT": AWS_ACCOUNT,
+        #                 "DEPLOY_REGION": AWS_REGION
+        #             },
+        #             role=cross_account_role
+        #         ),
+        #         CodeBuildRunStep(
+        #             "StartDockerBuild-Test",
+        #             input=source,
+        #             name_prefix="Staging",
+        #             stacks=linux_stage.stacks,
+        #             build_projects=["aws-lc-docker-image-build-linux"],
+        #             build_type="docker",
+        #             platform="linux",
+        #             env={
+        #                 "PIPELINE_EXECUTION_ID": "#{codepipeline.PipelineExecutionId}",
+        #                 "COMMIT_HASH": commit_hash,
+        #                 "DEPLOY_ACCOUNT": AWS_ACCOUNT,
+        #                 "DEPLOY_REGION": AWS_REGION
+        #             },
+        #             role=cross_account_role
+        #         )
+        #     ]
+        # )
+
+        # ci_stage = CiStage(
+        #     self,
+        #     "Staging-CiStage",
+        #     env=Environment(account=PIPELINE_ACCOUNT, region=PIPELINE_REGION)
+        # )
+
+        # pipeline.add_stage(
+        #     ci_stage,
+        #     post=[
+        #         CodeBuildStep(
+        #             "RunIntegrationTests",
+        #             commands=[
+        #                 "echo \"Environment variables:\"",
+        #                 "env",
+        #             ],
+        #             role=cross_account_role
+        #         ),
+        #     ]
+        # )
+
+        pipeline.build_pipeline()
+
+        # Schedule pipeline to run every Tuesday 15:00 UTC or 7:00 PST
+        events.Rule(
+            self, "WeeklyCodePipelineTrigger",
+            schedule=events.Schedule.cron(
+                minute="0",
+                hour="15",
+                # weekday="TUE", #TODO: Uncomment this line. It's running everyday right now to make sure I didn't break anything
+            ),
+            targets=[
+                targets.CodePipeline(
+                    pipeline=pipeline.pipeline
+                )
             ]
         )
 
