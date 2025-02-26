@@ -62,15 +62,14 @@ class AwsLcEC2TestingCIStack(Stack):
         selected_subnets = vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS)
 
         # create security group with default rules
-        security_group = ec2.SecurityGroup(self, id="{}-ec2-sg".format(id),
-                          allow_all_outbound=True,
-                          vpc=vpc,
-                          security_group_name='codebuild_ec2_sg')
-
+        # security_group = ec2.SecurityGroup(self, id="{}-ec2-sg".format(id),
+        #                   allow_all_outbound=True,
+        #                   vpc=vpc,
+        #                   security_group_name='codebuild_ec2_sg')
 
         # Define a IAM role for this stack.
         code_build_batch_policy = iam.PolicyDocument.from_json(code_build_batch_policy_in_json([id]))
-        ec2_policy = iam.PolicyDocument.from_json(ec2_policies_in_json(ec2_role.role_name, security_group.security_group_id, selected_subnets.subnets[0].subnet_id, vpc.vpc_id))
+        ec2_policy = iam.PolicyDocument.from_json(ec2_policies_in_json(ec2_role.role_name, vpc.vpc_default_security_group, selected_subnets.subnets[0].subnet_id, vpc.vpc_id))
         ssm_policy = iam.PolicyDocument.from_json(ssm_policies_in_json())
         codebuild_inline_policies = {"code_build_batch_policy": code_build_batch_policy,
                                      "ec2_policy": ec2_policy,
@@ -97,7 +96,7 @@ class AwsLcEC2TestingCIStack(Stack):
             build_spec=BuildSpecLoader.load(spec_file_path),
             environment_variables= {
                 "EC2_SECURITY_GROUP_ID": codebuild.BuildEnvironmentVariable(
-                    value=security_group.security_group_id
+                    value=vpc.vpc_default_security_group
                 ),
                 "EC2_SUBNET_ID": codebuild.BuildEnvironmentVariable(
                     value=selected_subnets.subnets[0].subnet_id

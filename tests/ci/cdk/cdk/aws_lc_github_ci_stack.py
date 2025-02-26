@@ -5,8 +5,10 @@ from aws_cdk import Duration, Stack, aws_codebuild as codebuild, aws_iam as iam,
 from constructs import Construct
 
 from cdk.components import PruneStaleGitHubBuilds
-from util.iam_policies import code_build_batch_policy_in_json, code_build_publish_metrics_in_json, code_build_cloudwatch_logs_policy_in_json
-from util.metadata import CAN_AUTOLOAD, GITHUB_PUSH_CI_BRANCH_TARGETS, GITHUB_REPO_OWNER, GITHUB_REPO_NAME
+from util.iam_policies import code_build_batch_policy_in_json, code_build_publish_metrics_in_json, \
+    code_build_cloudwatch_logs_policy_in_json, s3_read_policy_in_json
+from util.metadata import CAN_AUTOLOAD, GITHUB_PUSH_CI_BRANCH_TARGETS, GITHUB_REPO_OWNER, GITHUB_REPO_NAME, \
+    PIPELINE_ACCOUNT
 from util.build_spec_loader import BuildSpecLoader
 
 
@@ -40,11 +42,16 @@ class AwsLcGitHubCIStack(Stack):
         code_build_cloudwatch_logs_policy = iam.PolicyDocument.from_json(
             code_build_cloudwatch_logs_policy_in_json([log_group])
         )
+        s3_assets_policy = iam.PolicyDocument.from_json(s3_read_policy_in_json())
         resource_access_role = iam.Role(scope=self,
                                         id="{}-resource-role".format(id),
-                                        assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
+                                        assumed_by=iam.CompositePrincipal(
+                                            iam.ServicePrincipal("codebuild.amazonaws.com"),
+                                            iam.ArnPrincipal(f'arn:aws:iam::{PIPELINE_ACCOUNT}:role/CrossAccountCodeBuildRole')
+                                        ),
                                         inline_policies={
-                                            "code_build_cloudwatch_logs_policy": code_build_cloudwatch_logs_policy
+                                            "code_build_cloudwatch_logs_policy": code_build_cloudwatch_logs_policy,
+                                            "s3_assets_policy": s3_assets_policy
                                         })
 
         # Define a IAM role for this stack.
@@ -52,6 +59,7 @@ class AwsLcGitHubCIStack(Stack):
             code_build_batch_policy_in_json([id])
         )
         metrics_policy = iam.PolicyDocument.from_json(code_build_publish_metrics_in_json())
+
         inline_policies = {"code_build_batch_policy": code_build_batch_policy,
                            "metrics_policy": metrics_policy,
                            }

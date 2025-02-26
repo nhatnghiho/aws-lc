@@ -14,9 +14,7 @@ from cdk.aws_lc_ec2_test_framework_ci_stack import AwsLcEC2TestingCIStack
 from cdk.linux_docker_image_batch_build_stack import LinuxDockerImageBatchBuildStack
 from cdk.pipeline_stack import AwsLcCiPipeline
 from cdk.windows_docker_image_build_stack import WindowsDockerImageBuildStack
-from cdk.ecr_stack import EcrStack
-from util.metadata import AWS_ACCOUNT, AWS_REGION, LINUX_X86_ECR_REPO, LINUX_AARCH_ECR_REPO, WINDOWS_X86_ECR_REPO, \
-    PIPELINE_ACCOUNT, PIPELINE_REGION
+from util.metadata import AWS_ACCOUNT, AWS_REGION, PIPELINE_ACCOUNT, PIPELINE_REGION
 
 # Initialize app.
 app = App()

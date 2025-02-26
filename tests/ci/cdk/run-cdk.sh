@@ -4,6 +4,8 @@
 
 set -exuo pipefail
 
+source ./util/common.sh
+
 # -e: Exit on any failure
 # -x: Print the command before running
 # -u: Any variable that is not set will cause an error if used

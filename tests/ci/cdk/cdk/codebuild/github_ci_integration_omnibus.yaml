@@ -3,6 +3,9 @@
 
 version: 0.2
 
+.definitions:
+  &AWS_ACCOUNT 183295444613
+
 # Doc for batch https://docs.aws.amazon.com/codebuild/latest/userguide/batch-build-buildspec.html#build-spec.batch.build-list
 batch:
   build-list:
@@ -12,7 +15,8 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
+#        image: !join [*AWS_ACCOUNT, ".dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest"]
+        image: !Sub "${AWS_ACCOUNT}.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest"
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_s2n_integration.sh"
 
@@ -22,7 +26,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_crt_integration.sh"
 
@@ -32,7 +36,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:amazonlinux-2023_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:amazonlinux-2023_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_crt_integration.sh"
 
@@ -42,7 +46,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_sanitizer_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_sanitizer_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_openssh_integration.sh"
           OPENSSH_BRANCH: "master"
@@ -53,7 +57,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_sanitizer_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_sanitizer_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_openssh_integration.sh"
           OPENSSH_BRANCH: "V_8_9"
@@ -64,7 +68,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:amazonlinux-2023_clang-15x_sanitizer_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:amazonlinux-2023_clang-15x_sanitizer_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_openssh_integration.sh"
           OPENSSH_BRANCH: "master"
@@ -75,7 +79,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:amazonlinux-2023_clang-15x_sanitizer_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:amazonlinux-2023_clang-15x_sanitizer_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_openssh_integration.sh"
           OPENSSH_BRANCH: "V_8_9"
@@ -86,7 +90,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_MEDIUM
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_postgres_integration.sh"
 
@@ -96,7 +100,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_postgres_integration.sh"
 
@@ -107,7 +111,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_mysql_integration.sh"
 
@@ -117,7 +121,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_mysql_integration.sh"
 
@@ -127,7 +131,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_mariadb_integration.sh"
 
@@ -137,7 +141,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_mariadb_integration.sh"
 
@@ -147,7 +151,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_MEDIUM
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_curl_integration.sh"
 
@@ -157,7 +161,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_curl_integration.sh"
 
@@ -167,7 +171,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_MEDIUM
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_nginx_integration.sh"
 
@@ -177,7 +181,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_nginx_integration.sh"
 
@@ -187,7 +191,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_MEDIUM
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_sslproxy_integration.sh"
 
@@ -197,7 +201,7 @@ batch:
         type: ARM_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-aarch:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_sslproxy_integration.sh"
 
@@ -207,7 +211,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_monit_integration.sh"
 
@@ -217,7 +221,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_librelp_integration.sh"
 
@@ -227,7 +231,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_haproxy_integration.sh"
 
@@ -237,7 +241,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_trousers_integration.sh"
 
@@ -247,6 +251,6 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_ntp_integration.sh"

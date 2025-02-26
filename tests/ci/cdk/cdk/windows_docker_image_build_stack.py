@@ -11,7 +11,6 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from cdk.docker_ecr_construct import DockerEcrConstruct
 from util.iam_policies import (
     ecr_power_user_policy_in_json,
     s3_read_write_policy_in_json,
@@ -48,6 +47,7 @@ class WindowsDockerImageBuildStack(Stack):
         ecr_repo = "{}.dkr.ecr.{}.amazonaws.com/{}".format(
             AWS_ACCOUNT, AWS_REGION, WINDOWS_X86_ECR_REPO
         )
+
         placeholder_map = {
             "ECR_PLACEHOLDER": ecr_repo,
             "GITHUB_OWNER_PLACEHOLDER": GITHUB_REPO_OWNER,
