@@ -4,7 +4,6 @@
 from aws_cdk import Duration, Stack, aws_codebuild as codebuild, aws_iam as iam, aws_ec2 as ec2
 from constructs import Construct
 
-from cdk.docker_ecr_construct import DockerEcrConstruct
 from util.metadata import (
     AWS_ACCOUNT,
     GITHUB_REPO_OWNER,
