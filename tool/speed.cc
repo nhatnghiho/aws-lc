@@ -2810,9 +2810,12 @@ bool Speed(const std::vector<std::string> &args) {
        !SpeedEvpCipherGeneric(EVP_aes_192_ctr(), "EVP-AES-192-CTR", kTLSADLen, selected) ||
        !SpeedEvpCipherGeneric(EVP_aes_256_ctr(), "EVP-AES-256-CTR", kTLSADLen, selected) ||
        !SpeedAES256XTS("AES-256-XTS", selected) ||
-       !SpeedEvpCipherGeneric(EVP_rc4(), "EVP-RC4", kTLSADLen, selected) ||
-       // OpenSSL 3.0 doesn't allow MD4 calls
 #if !defined(OPENSSL_3_0_BENCHMARK)
+       // OpenSSL 3.0 deprecated RC4
+       !SpeedEvpCipherGeneric(EVP_rc4(), "EVP-RC4", kTLSADLen, selected) ||
+#endif
+#if !defined(OPENSSL_3_0_BENCHMARK)
+       // OpenSSL 3.0 doesn't allow MD4 calls
        !SpeedHash(EVP_md4(), "MD4", selected) ||
 #endif
        !SpeedHash(EVP_md5(), "MD5", selected) ||
@@ -2828,7 +2831,7 @@ bool Speed(const std::vector<std::string> &args) {
        !SpeedHash(EVP_sha3_384(), "SHA3-384", selected) ||
        !SpeedHash(EVP_sha3_512(), "SHA3-512", selected) ||
 #endif
-#if (!defined(OPENSSL_1_0_BENCHMARK) && !defined(BORINGSSL_BENCHMARK) && !defined(OPENSSL_IS_AWSLC)) || AWSLC_API_VERSION >= 31
+#if (!defined(OPENSSL_1_0_BENCHMARK) && !defined(BORINGSSL_BENCHMARK) && !defined(OPENSSL_IS_AWSLC)) || AWSLC_API_VERSION >= 22
        // OpenSSL 1.0 and BoringSSL don't support SHAKE
        !SpeedHash(EVP_shake128(), "SHAKE-128", selected) ||
        !SpeedHash(EVP_shake256(), "SHAKE-256", selected) ||
@@ -2837,7 +2840,7 @@ bool Speed(const std::vector<std::string> &args) {
        // BoringSSL doesn't support ripemd160
        !SpeedHash(EVP_ripemd160(), "RIPEMD-160", selected) ||
 #endif
-#if !defined(BORINGSSL_BENCHMARK)
+#if !defined(OPENSSL_1_0_BENCHMARK)
        !SpeedHash(EVP_md5_sha1(), "MD5-SHA-1", selected) ||
 #endif
        !SpeedHmac(EVP_md5(), "HMAC-MD5", selected) ||
