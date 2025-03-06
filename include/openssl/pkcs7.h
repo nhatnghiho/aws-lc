@@ -467,6 +467,16 @@ OPENSSL_EXPORT OPENSSL_DEPRECATED int PKCS7_verify(PKCS7 *p7,
 // PKCS7_is_detached returns 0 if |p7| has attached content and 1 otherwise.
 OPENSSL_EXPORT OPENSSL_DEPRECATED int PKCS7_is_detached(PKCS7 *p7);
 
+// PKCS7_set_detached frees the attached content of |p7| if |detach| is set to
+// 1. It returns 0 if otherwise or if |p7| is not of type signed.
+//
+// Note: |detach| is intended to be a boolean and MUST be set with either 1 or
+//       0.
+OPENSSL_EXPORT OPENSSL_DEPRECATED int PKCS7_set_detached(PKCS7 *p7, int detach);
+
+// PKCS7_get_detached returns 0 if |p7| has attached content and 1 otherwise.
+OPENSSL_EXPORT OPENSSL_DEPRECATED int PKCS7_get_detached(PKCS7 *p7);
+
 // PKCS7_dataInit creates or initializes a BIO chain for reading data from or
 // writing data to |p7|. If |bio| is non-null, it is added to the chain.
 // Otherwise, a new BIO is allocated and returned to anchor the chain.
@@ -523,6 +533,11 @@ OPENSSL_EXPORT OPENSSL_DEPRECATED PKCS7 *SMIME_read_PKCS7(BIO *in, BIO **bcont);
 OPENSSL_EXPORT OPENSSL_DEPRECATED int SMIME_write_PKCS7(BIO *out, PKCS7 *p7,
                                                         BIO *data, int flags);
 
+// PKCS7_print_ctx prints "PKCS7 printing is not supported" and returns 1.
+OPENSSL_EXPORT OPENSSL_DEPRECATED int PKCS7_print_ctx(BIO *bio, PKCS7 *pkcs7,
+                                                      int indent,
+                                                      const ASN1_PCTX *pctx);
+
 #if defined(__cplusplus)
 }  // extern C
 
@@ -571,5 +586,6 @@ BSSL_NAMESPACE_END
 #define PKCS7_R_PKCS7_ADD_SIGNATURE_ERROR 132
 #define PKCS7_R_NO_DEFAULT_DIGEST 133
 #define PKCS7_R_CERT_MUST_BE_RSA 134
+#define PKCS7_R_OPERATION_NOT_SUPPORTED_ON_THIS_TYPE 135
 
 #endif  // OPENSSL_HEADER_PKCS7_H

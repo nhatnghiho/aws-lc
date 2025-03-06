@@ -576,7 +576,6 @@ w1AH9efZBw==
 -----END CERTIFICATE-----
 )";
 
-#ifdef ENABLE_DILITHIUM
 // This certificate is the example certificate provided in section 3 of
 //https://datatracker.ietf.org/doc/draft-ietf-lamps-dilithium-certificates/
 static const char kMLDSA65Cert[] = R"(
@@ -945,8 +944,6 @@ yvcCFlVgO52u3OLlHy1RarPY5PA7TLC+6PI0YXKCkJWkwt7l5ujqAAAAAAAAAAAK
 DhQcIi8=
 -----END CERTIFICATE-----
 )";
-
-#endif
 
 // kSANTypesLeaf is a leaf certificate (signed by |kSANTypesRoot|) which
 // contains SANS for example.com, test@example.com, 127.0.0.1, and
@@ -2923,8 +2920,6 @@ TEST(X509Test, Ed25519Sign) {
   ASSERT_TRUE(SignatureRoundTrips(md_ctx.get(), pub.get()));
 }
 
-#ifdef ENABLE_DILITHIUM
-
 TEST(X509Test, MLDSA65SignVerifyCert) {
   // This test generates a MLDSA65 keypair, generates and signs a
   // certificate, then verifies the certificate's signature.
@@ -2994,8 +2989,6 @@ TEST(X509Test, TestBadParamsMLDSA65) {
   ASSERT_EQ(X509_R_INVALID_PARAMETER, ERR_GET_REASON(err));
   ERR_clear_error();
 }
-
-#endif
 
 static bool PEMToDER(bssl::UniquePtr<uint8_t> *out, size_t *out_len,
                      const char *pem) {
@@ -3243,6 +3236,25 @@ TEST(X509Test, PrettyPrintIntegers) {
       EXPECT_STREQ(in, out.get());
     }
   }
+}
+
+TEST(X509Test, X509AlgorSetMd) {
+  bssl::UniquePtr<X509_ALGOR> alg(X509_ALGOR_new());
+  ASSERT_TRUE(alg);
+  EXPECT_TRUE(X509_ALGOR_set_md(alg.get(), EVP_sha256()));
+  const ASN1_OBJECT *obj;
+  const void *pval;
+  int ptype = 0;
+  X509_ALGOR_get0(&obj, &ptype, &pval, alg.get());
+  EXPECT_TRUE(obj);
+  EXPECT_EQ(OBJ_obj2nid(obj), NID_sha256);
+  EXPECT_EQ(ptype, V_ASN1_NULL); // OpenSSL has V_ASN1_UNDEF
+  EXPECT_EQ(pval, nullptr);
+  EXPECT_TRUE(X509_ALGOR_set_md(alg.get(), EVP_md5()));
+  X509_ALGOR_get0(&obj, &ptype, &pval, alg.get());
+  EXPECT_EQ(OBJ_obj2nid(obj), NID_md5);
+  EXPECT_EQ(ptype, V_ASN1_NULL);
+  EXPECT_EQ(pval, nullptr);
 }
 
 TEST(X509Test, X509NameSet) {

@@ -230,6 +230,7 @@ int EVP_marshal_digest_algorithm(CBB *cbb, const EVP_MD *md) {
     return 0;
   }
 
+  // TODO(crbug.com/boringssl/710): Is this correct? See RFC 4055, section 2.1.
   if (!CBB_add_asn1(&algorithm, &null, CBS_ASN1_NULL) ||
       !CBB_flush(cbb)) {
     return 0;
@@ -253,8 +254,10 @@ const EVP_MD *EVP_get_digestbyname(const char *name) {
 
 static void blake2b256_init(EVP_MD_CTX *ctx) { BLAKE2B256_Init(ctx->md_data); }
 
-static void blake2b256_update(EVP_MD_CTX *ctx, const void *data, size_t len) {
+static int blake2b256_update(EVP_MD_CTX *ctx, const void *data, size_t len) {
+  // BLAKE2B256_Update is a void function
   BLAKE2B256_Update(ctx->md_data, data, len);
+  return 1;
 }
 
 static void blake2b256_final(EVP_MD_CTX *ctx, uint8_t *md) {
@@ -270,14 +273,15 @@ static const EVP_MD evp_md_blake2b256 = {
   blake2b256_final,
   BLAKE2B_CBLOCK,
   sizeof(BLAKE2B_CTX),
-  /*finalXOf*/ NULL,
+  /*finalXOf*/   NULL,
+  /*squeezeXOf*/ NULL
 };
 
 const EVP_MD *EVP_blake2b256(void) { return &evp_md_blake2b256; }
 
 static void null_init(EVP_MD_CTX *ctx) {}
 
-static void null_update(EVP_MD_CTX *ctx, const void *data, size_t count) {}
+static int null_update(EVP_MD_CTX *ctx, const void *data, size_t count) { return 1;}
 
 static void null_final(EVP_MD_CTX *ctx, unsigned char *md) {}
 
@@ -290,7 +294,8 @@ static const EVP_MD evp_md_null = {
   null_final,
   0,
   sizeof(EVP_MD_CTX),
-  NULL,
+  /*finalXOf*/   NULL,
+  /*squeezeXOf*/ NULL
 };
 
 const EVP_MD *EVP_md_null(void) { return &evp_md_null; }

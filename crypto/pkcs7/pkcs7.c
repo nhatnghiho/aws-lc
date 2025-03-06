@@ -843,6 +843,33 @@ int PKCS7_is_detached(PKCS7 *p7) {
   return 0;
 }
 
+int PKCS7_set_detached(PKCS7 *p7, int detach) {
+  GUARD_PTR(p7);
+  if (detach != 0 && detach != 1) {
+    // |detach| is meant to be used as a boolean int.
+    return 0;
+  }
+
+  if (PKCS7_type_is_signed(p7)) {
+    if (p7->d.sign == NULL) {
+      OPENSSL_PUT_ERROR(PKCS7, PKCS7_R_NO_CONTENT);
+      return 0;
+    }
+    if (detach && PKCS7_type_is_data(p7->d.sign->contents)) {
+      ASN1_OCTET_STRING_free(p7->d.sign->contents->d.data);
+      p7->d.sign->contents->d.data = NULL;
+    }
+    return detach;
+  } else {
+    OPENSSL_PUT_ERROR(PKCS7, PKCS7_R_OPERATION_NOT_SUPPORTED_ON_THIS_TYPE);
+    return 0;
+  }
+}
+
+int PKCS7_get_detached(PKCS7 *p7) {
+  return PKCS7_is_detached(p7);
+}
+
 
 static BIO *pkcs7_find_digest(EVP_MD_CTX **pmd, BIO *bio, int nid) {
   GUARD_PTR(pmd);
@@ -1206,6 +1233,12 @@ static BIO *pkcs7_data_decode(PKCS7 *p7, EVP_PKEY *pkey, X509 *pcert) {
     case NID_pkcs7_enveloped:
       rsk = p7->d.enveloped->recipientinfo;
       enc_alg = p7->d.enveloped->enc_data->algorithm;
+      if (enc_alg == NULL || enc_alg->parameter == NULL ||
+          enc_alg->parameter->value.octet_string == NULL ||
+          enc_alg->algorithm == NULL) {
+        OPENSSL_PUT_ERROR(PKCS7, ERR_R_PKCS7_LIB);
+        goto err;
+      }
       // |data_body| is NULL if the optional EncryptedContent is missing.
       data_body = p7->d.enveloped->enc_data->enc_data;
       cipher = EVP_get_cipherbynid(OBJ_obj2nid(enc_alg->algorithm));
@@ -1219,7 +1252,7 @@ static BIO *pkcs7_data_decode(PKCS7 *p7, EVP_PKEY *pkey, X509 *pcert) {
       goto err;
   }
 
-  // Detached content must be supplied via in_bio instead
+  // envelopedData must have data content to decrypt
   if (data_body == NULL) {
     OPENSSL_PUT_ERROR(PKCS7, PKCS7_R_NO_CONTENT);
     goto err;
@@ -1250,7 +1283,10 @@ static BIO *pkcs7_data_decode(PKCS7 *p7, EVP_PKEY *pkey, X509 *pcert) {
       if (!pkcs7_cmp_ri(ri, pcert)) {
         break;
       }
+#if !defined(BORINGSSL_UNSAFE_FUZZER_MODE)
+      // For fuzz testing, we do not want to bail out early.
       ri = NULL;
+#endif
     }
     if (ri == NULL) {
       OPENSSL_PUT_ERROR(PKCS7, PKCS7_R_NO_RECIPIENT_MATCHES_CERTIFICATE);
@@ -1290,14 +1326,14 @@ static BIO *pkcs7_data_decode(PKCS7 *p7, EVP_PKEY *pkey, X509 *pcert) {
       !EVP_CipherInit_ex(evp_ctx, cipher, NULL, NULL, NULL, 0)) {
     goto err;
   }
-  uint8_t iv[EVP_MAX_IV_LENGTH];
-  OPENSSL_memcpy(iv, enc_alg->parameter->value.octet_string->data,
-                 enc_alg->parameter->value.octet_string->length);
   const int expected_iv_len = EVP_CIPHER_CTX_iv_length(evp_ctx);
   if (enc_alg->parameter->value.octet_string->length != expected_iv_len) {
     OPENSSL_PUT_ERROR(PKCS7, ERR_R_PKCS7_LIB);
     goto err;
   }
+  uint8_t iv[EVP_MAX_IV_LENGTH];
+  OPENSSL_memcpy(iv, enc_alg->parameter->value.octet_string->data,
+                 expected_iv_len);
   if (!EVP_CipherInit_ex(evp_ctx, NULL, NULL, NULL, iv, 0)) {
     goto err;
   }
@@ -1323,9 +1359,12 @@ static BIO *pkcs7_data_decode(PKCS7 *p7, EVP_PKEY *pkey, X509 *pcert) {
 
   OPENSSL_free(cek);
   OPENSSL_free(dummy_key);
+  cek = NULL;
+  dummy_key = NULL;
   out = cipher_bio;
 
-  if (data_body && data_body->length > 0) {
+  // We verify data_body != NULL above
+  if (data_body->length > 0) {
     data_bio = BIO_new_mem_buf(data_body->data, data_body->length);
   } else {
     data_bio = BIO_new(BIO_s_mem());
@@ -1360,7 +1399,7 @@ PKCS7_RECIP_INFO *PKCS7_add_recipient(PKCS7 *p7, X509 *x509) {
   return ri;
 }
 
-int PKCS7_decrypt(PKCS7 *p7, EVP_PKEY *pkey, X509 *cert, BIO *data, int flags) {
+int PKCS7_decrypt(PKCS7 *p7, EVP_PKEY *pkey, X509 *cert, BIO *data, int _flags) {
   GUARD_PTR(p7);
   GUARD_PTR(pkey);
   GUARD_PTR(data);
@@ -1590,8 +1629,11 @@ int PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store,
     }
     // NOTE: unlike most of our functions, |X509_verify_cert| can return <= 0
     if (X509_verify_cert(cert_ctx) <= 0) {
+#if !defined(BORINGSSL_UNSAFE_FUZZER_MODE)
+      // For fuzz testing, we do not want to bail out early.
       OPENSSL_PUT_ERROR(PKCS7, PKCS7_R_CERTIFICATE_VERIFY_ERROR);
       goto out;
+#endif
     }
   }
 
@@ -1607,8 +1649,11 @@ int PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store,
     PKCS7_SIGNER_INFO *si = sk_PKCS7_SIGNER_INFO_value(sinfos, ii);
     X509 *signer = sk_X509_value(signers, ii);
     if (!pkcs7_signature_verify(p7bio, p7, si, signer)) {
+#if !defined(BORINGSSL_UNSAFE_FUZZER_MODE)
+      // For fuzz testing, we do not want to bail out early.
       OPENSSL_PUT_ERROR(PKCS7, PKCS7_R_SIGNATURE_FAILURE);
       goto out;
+#endif
     }
   }
 

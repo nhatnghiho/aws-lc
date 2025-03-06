@@ -179,10 +179,10 @@ TEST(ECTest, Encoding) {
   ASSERT_TRUE(y_hex);
 
   EXPECT_STREQ(
-      "c81561ecf2e54edefe6617db1c7a34a70744ddb261f269b83dacfcd2ade5a681",
+      "C81561ECF2E54EDEFE6617DB1C7A34A70744DDB261F269B83DACFCD2ADE5A681",
       x_hex.get());
   EXPECT_STREQ(
-      "e0e2afa3f9b6abe4c698ef6495f1be49a3196c5056acb3763fe4507eec596e88",
+      "E0E2AFA3F9B6ABE4C698EF6495F1BE49A3196C5056ACB3763FE4507EEC596E88",
       y_hex.get());
 }
 
@@ -1488,7 +1488,7 @@ TEST(ECTest, SmallGroupOrder) {
 #else
 // AWSLCAndroidTestRunner does not take tests that do |ASSERT_DEATH| very well.
 // GTEST issue: https://github.com/google/googletest/issues/1496.
-#if !defined(OPENSSL_ANDROID)
+#if !defined(OPENSSL_ANDROID) && !defined(AWSLC_FIPS_FAILURE_CALLBACK)
 
 TEST(ECDeathTest, SmallGroupOrderAndDie) {
   // Make a P-224 key and corrupt the group order to be small in order to fail

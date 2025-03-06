@@ -1598,7 +1598,7 @@ ___
   vmovdqu8 	 %zmm1,($output)
   vmovdqu 	 %xmm2,0x40($output)
   add 	 \$0x50,$output
-  movdqa 	 %xmm2,%xmm8
+  vmovdqa 	 %xmm2,%xmm8
   vextracti32x4 	 \$0x1,%zmm10,%xmm0
   and 	 \$0xf,$length
   je 	 .L_ret_${rndsuffix}
@@ -2493,7 +2493,7 @@ ___
   vmovdqu8 	 0x40($input),%zmm2
   vmovdqu8 	 0x80($input),%zmm3
   vmovdqu8 	 0xc0($input),%zmm4
-  vmovdqu8 	 0xf0($input),%zmm5
+  vmovdqu8 	 0xf0($input),%xmm5
   add 	 \$0x100,$input
 ___
   }

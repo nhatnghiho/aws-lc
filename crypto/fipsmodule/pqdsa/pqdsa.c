@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0 OR ISC
 #include <openssl/evp.h>
 #include <openssl/mem.h>
-
 #include <openssl/base.h>
-#include "../../evp_extra/internal.h"
+
 #include "../delocate.h"
+#include "../../evp_extra/internal.h"
+#include "../ml_dsa/ml_dsa.h"
 #include "internal.h"
-#include "../crypto/dilithium/ml_dsa.h"
 
 // ML-DSA OIDs as defined within:
 // https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
@@ -34,8 +34,10 @@ static void PQDSA_KEY_clear(PQDSA_KEY *key) {
   key->pqdsa = NULL;
   OPENSSL_free(key->public_key);
   OPENSSL_free(key->private_key);
+  OPENSSL_free(key->seed);
   key->public_key = NULL;
   key->private_key = NULL;
+  key->seed = NULL;
 }
 
 int PQDSA_KEY_init(PQDSA_KEY *key, const PQDSA *pqdsa) {
@@ -48,7 +50,8 @@ int PQDSA_KEY_init(PQDSA_KEY *key, const PQDSA *pqdsa) {
   key->pqdsa = pqdsa;
   key->public_key = OPENSSL_malloc(pqdsa->public_key_len);
   key->private_key = OPENSSL_malloc(pqdsa->private_key_len);
-  if (key->public_key == NULL || key->private_key == NULL) {
+  key->seed = OPENSSL_malloc(pqdsa->keygen_seed_len);
+  if (key->public_key == NULL || key->private_key == NULL || key->seed == NULL) {
     PQDSA_KEY_clear(key);
     return 0;
   }
@@ -67,8 +70,14 @@ const PQDSA *PQDSA_KEY_get0_dsa(PQDSA_KEY* key) {
   return key->pqdsa;
 }
 
-int PQDSA_KEY_set_raw_public_key(PQDSA_KEY *key, const uint8_t *in) {
-  key->public_key = OPENSSL_memdup(in, key->pqdsa->public_key_len);
+int PQDSA_KEY_set_raw_public_key(PQDSA_KEY *key, CBS *in) {
+  // Check if the parsed length corresponds with the expected length.
+  if (CBS_len(in) != key->pqdsa->public_key_len) {
+    OPENSSL_PUT_ERROR(EVP, EVP_R_INVALID_BUFFER_SIZE);
+    return 0;
+  }
+
+  key->public_key = OPENSSL_memdup(CBS_data(in), key->pqdsa->public_key_len);
   if (key->public_key == NULL) {
     return 0;
   }
@@ -76,31 +85,119 @@ int PQDSA_KEY_set_raw_public_key(PQDSA_KEY *key, const uint8_t *in) {
   return 1;
 }
 
-int PQDSA_KEY_set_raw_private_key(PQDSA_KEY *key, const uint8_t *in) {
-  key->private_key = OPENSSL_memdup(in, key->pqdsa->private_key_len);
+int PQDSA_KEY_set_raw_keypair_from_seed(PQDSA_KEY *key, CBS *in) {
+  // Check if the parsed length corresponds with the expected length.
+  if (CBS_len(in) != key->pqdsa->keygen_seed_len) {
+    OPENSSL_PUT_ERROR(EVP, EVP_R_INVALID_BUFFER_SIZE);
+    return 0;
+  }
+
+  //allocate buffers to store key pair
+  uint8_t *public_key = OPENSSL_malloc(key->pqdsa->public_key_len);
+  if (public_key == NULL) {
+    return 0;
+  }
+
+  uint8_t *private_key = OPENSSL_malloc(key->pqdsa->private_key_len);
+  if (private_key == NULL) {
+    OPENSSL_free(public_key);
+    return 0;
+  }
+
+  uint8_t *seed = OPENSSL_malloc(key->pqdsa->keygen_seed_len);
+  if (seed == NULL) {
+    OPENSSL_free(private_key);
+    OPENSSL_free(public_key);
+    return 0;
+  }
+
+  // attempt to generate the key from the provided seed
+  if (!key->pqdsa->method->pqdsa_keygen_internal(public_key,
+                                                 private_key,
+                                                 CBS_data(in))) {
+    OPENSSL_free(public_key);
+    OPENSSL_free(private_key);
+    OPENSSL_free(seed);
+    OPENSSL_PUT_ERROR(EVP, EVP_R_DECODE_ERROR);
+    return 0;
+  }
+
+  // copy the seed data
+  if (!CBS_copy_bytes(in, seed, key->pqdsa->keygen_seed_len)) {
+    OPENSSL_free(public_key);
+    OPENSSL_free(private_key);
+    OPENSSL_free(seed);
+    OPENSSL_PUT_ERROR(EVP, EVP_R_DECODE_ERROR);
+    return 0;
+  }
+
+  // set the public key, private key, and seed
+  key->public_key = public_key;
+  key->private_key = private_key;
+  key->seed = seed;
+  return 1;
+}
+
+int PQDSA_KEY_set_raw_private_key(PQDSA_KEY *key, CBS *in) {
+  // Check if the parsed length corresponds with the expected length.
+  if (CBS_len(in) != key->pqdsa->private_key_len) {
+    OPENSSL_PUT_ERROR(EVP, EVP_R_INVALID_BUFFER_SIZE);
+    return 0;
+  }
+
+  key->private_key = OPENSSL_memdup(CBS_data(in), key->pqdsa->private_key_len);
   if (key->private_key == NULL) {
     return 0;
   }
+
+  // Create buffers to store public key based on size
+  size_t pk_len = key->pqdsa->public_key_len;
+  uint8_t *public_key = OPENSSL_malloc(pk_len);
+
+  if (public_key == NULL) {
+    return 0;
+  }
+
+  // Construct the public key from the private key
+  if (!key->pqdsa->method->pqdsa_pack_pk_from_sk(public_key, key->private_key)) {
+    OPENSSL_free(public_key);
+    OPENSSL_PUT_ERROR(EVP, EVP_R_DECODE_ERROR);
+    return 0;
+  }
+
+  key->public_key = public_key;
 
   return 1;
 }
 
 DEFINE_LOCAL_DATA(PQDSA_METHOD, sig_ml_dsa_44_method) {
   out->pqdsa_keygen = ml_dsa_44_keypair;
-  out->pqdsa_sign = ml_dsa_44_sign;
-  out->pqdsa_verify = ml_dsa_44_verify;
+  out->pqdsa_keygen_internal = ml_dsa_44_keypair_internal;
+  out->pqdsa_sign_message = ml_dsa_44_sign;
+  out->pqdsa_sign = ml_dsa_extmu_44_sign;
+  out->pqdsa_verify_message = ml_dsa_44_verify;
+  out->pqdsa_verify = ml_dsa_extmu_44_verify;
+  out->pqdsa_pack_pk_from_sk = ml_dsa_44_pack_pk_from_sk;
 }
 
 DEFINE_LOCAL_DATA(PQDSA_METHOD, sig_ml_dsa_65_method) {
   out->pqdsa_keygen = ml_dsa_65_keypair;
-  out->pqdsa_sign = ml_dsa_65_sign;
-  out->pqdsa_verify = ml_dsa_65_verify;
+  out->pqdsa_keygen_internal = ml_dsa_65_keypair_internal;
+  out->pqdsa_sign_message = ml_dsa_65_sign;
+  out->pqdsa_sign = ml_dsa_extmu_65_sign;
+  out->pqdsa_verify_message = ml_dsa_65_verify;
+  out->pqdsa_verify = ml_dsa_extmu_65_verify;
+  out->pqdsa_pack_pk_from_sk = ml_dsa_65_pack_pk_from_sk;
 }
 
 DEFINE_LOCAL_DATA(PQDSA_METHOD, sig_ml_dsa_87_method) {
   out->pqdsa_keygen = ml_dsa_87_keypair;
-  out->pqdsa_sign = ml_dsa_87_sign;
-  out->pqdsa_verify = ml_dsa_87_verify;
+  out->pqdsa_keygen_internal = ml_dsa_87_keypair_internal;
+  out->pqdsa_sign_message = ml_dsa_87_sign;
+  out->pqdsa_sign = ml_dsa_extmu_87_sign;
+  out->pqdsa_verify_message = ml_dsa_87_verify;
+  out->pqdsa_verify = ml_dsa_extmu_87_verify;
+  out->pqdsa_pack_pk_from_sk = ml_dsa_87_pack_pk_from_sk;
 }
 
 DEFINE_LOCAL_DATA(PQDSA, sig_ml_dsa_44) {

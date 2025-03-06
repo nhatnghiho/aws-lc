@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5..3.31)
 
 if(POLICY CMP0091)
 cmake_policy(SET CMP0091 NEW)
@@ -101,7 +101,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (NOT DEFINED CMAKE_C_STANDARD)
   try_compile(
           RESULT
-          ${PROJECT_BINARY_DIR}
+          ${AWSLC_BINARY_DIR}
           SOURCES "${CMAKE_CURRENT_LIST_DIR}/tests/compiler_features_tests/c11.c"
           COMPILE_DEFINITIONS -c -std=c11)
   if(RESULT)
@@ -118,7 +118,7 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
   set(GCC 1)
 endif()
 
-if (UNIX AND NOT APPLE)
+if (NOT WIN32 AND NOT APPLE)
   include(GNUInstallDirs)
 elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
   set(CMAKE_INSTALL_LIBDIR "lib")
@@ -145,7 +145,7 @@ if(NOT DISABLE_PERL)
   find_package(Perl REQUIRED)
 endif()
 
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" AND NOT CMAKE_CROSSCOMPILING)
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" AND BUILD_TESTING AND NOT CMAKE_CROSSCOMPILING)
   find_package(PkgConfig QUIET)
   if (PkgConfig_FOUND)
     pkg_check_modules(LIBUNWIND libunwind-generic)
@@ -210,7 +210,7 @@ if(BORINGSSL_PREFIX AND BORINGSSL_PREFIX_SYMBOLS AND GO_EXECUTABLE)
   if(IS_ABSOLUTE ${BORINGSSL_PREFIX_SYMBOLS})
     set(BORINGSSL_PREFIX_SYMBOLS_PATH ${BORINGSSL_PREFIX_SYMBOLS})
   else()
-    set(BORINGSSL_PREFIX_SYMBOLS_PATH ${PROJECT_BINARY_DIR}/${BORINGSSL_PREFIX_SYMBOLS})
+    set(BORINGSSL_PREFIX_SYMBOLS_PATH ${AWSLC_BINARY_DIR}/${BORINGSSL_PREFIX_SYMBOLS})
   endif()
 
   add_custom_command(
@@ -244,7 +244,7 @@ elseif(BORINGSSL_PREFIX AND BORINGSSL_PREFIX_HEADERS)
   if(IS_ABSOLUTE ${BORINGSSL_PREFIX_HEADERS})
     set(BORINGSSL_PREFIX_HEADERS_PATH ${BORINGSSL_PREFIX_HEADERS})
   else()
-    set(BORINGSSL_PREFIX_HEADERS_PATH ${PROJECT_BINARY_DIR}/${BORINGSSL_PREFIX_HEADERS})
+    set(BORINGSSL_PREFIX_HEADERS_PATH ${AWSLC_BINARY_DIR}/${BORINGSSL_PREFIX_HEADERS})
   endif()
 
   file(COPY ${BORINGSSL_PREFIX_HEADERS_PATH}/openssl/boringssl_prefix_symbols.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/symbol_prefix_include/openssl)
@@ -280,7 +280,7 @@ endif()
 macro(check_compiler file_to_test flag_to_set)
   try_compile(
           RESULT
-          ${PROJECT_BINARY_DIR}
+          ${AWSLC_BINARY_DIR}
           SOURCES "${CMAKE_CURRENT_LIST_DIR}/tests/compiler_features_tests/${file_to_test}"
           COMPILE_DEFINITIONS "-Werror"
           OUTPUT_VARIABLE ERROR_MESSAGE)
@@ -737,13 +737,18 @@ if(FIPS)
     message(FATAL_ERROR "Building AWS-LC for FIPS requires Go and Perl")
   endif()
 
-  if(NOT BUILD_SHARED_LIBS AND NOT (UNIX AND NOT APPLE))
-    message(FATAL_ERROR "Static FIPS build of AWS-LC is suported only on Linux")
+  if(NOT BUILD_SHARED_LIBS AND NOT (NOT WIN32 AND NOT APPLE))
+    message(FATAL_ERROR "Static FIPS build of AWS-LC is supported only on Linux")
   endif()
 
   if(WIN32 AND CMAKE_BUILD_TYPE_LOWER STREQUAL "debug")
     message(FATAL_ERROR "Windows Debug build is not supported with FIPS, use Release or RelWithDebInfo")
   endif()
+
+  string(REGEX MATCH "(^| )-DAWSLC_FIPS_FAILURE_CALLBACK($| )" FIPS_CALLBACK_ENABLED "${CMAKE_C_FLAGS}")
+  if(FIPS_CALLBACK_ENABLED AND BUILD_SHARED_LIBS)
+    message(FATAL_ERROR "AWSLC_FIPS_FAILURE_CALLBACK only supported with the static library build of AWS-LC")
+  endif ()
 
   add_definitions(-DBORINGSSL_FIPS)
   if(FIPS_BREAK_TEST)
@@ -773,8 +778,6 @@ endif()
 
 if(CONSTANT_TIME_VALIDATION)
   add_definitions(-DBORINGSSL_CONSTANT_TIME_VALIDATION)
-  # Asserts will often test secret data.
-  add_definitions(-DNDEBUG)
 endif()
 
 # CMake's iOS support uses Apple's multiple-architecture toolchain. It takes an
@@ -984,30 +987,27 @@ if(BUILD_TESTING)
         DEPENDS util/embed_test_data.go ${CRYPTO_TEST_DATA}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   else()
-    file(COPY ${GENERATE_CODE_ROOT}/crypto_test_data.cc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
+    add_custom_command(
+        OUTPUT crypto_test_data.cc
+        COMMAND ${CMAKE_COMMAND} -E tar "jxvf" ${GENERATE_CODE_ROOT}/crypto_test_data.cc.tar.bz2
+        DEPENDS  ${GENERATE_CODE_ROOT}/crypto_test_data.cc.tar.bz2
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
   endif()
   add_library(crypto_test_data OBJECT crypto_test_data.cc)
 
   # sets tests to compile an so executable file for testing in our Android app CI.
   if(ANDROIDTESTRUNNER)
-    set(CRYPTO_TEST_EXEC crypto_test.so)
-    set(RANDOM_TEST_EXEC urandom_test.so)
-    set(SSL_TEST_EXEC ssl_test.so)
-    set(MEM_TEST_EXEC mem_test.so)
-    set(MEM_SET_TEST_EXEC mem_set_test.so)
-    set(INTEGRATION_TEST_EXEC integration_test.so)
-    set(DYNAMIC_LOADING_TEST_EXEC dynamic_loading_test.so)
-    set(RWLOCK_STATIC_INIT_TEST_EXEC rwlock_static_init.so)
-  else()
-    set(CRYPTO_TEST_EXEC crypto_test)
-    set(RANDOM_TEST_EXEC urandom_test)
-    set(SSL_TEST_EXEC ssl_test)
-    set(MEM_TEST_EXEC mem_test)
-    set(MEM_SET_TEST_EXEC mem_set_test)
-    set(INTEGRATION_TEST_EXEC integration_test)
-    set(DYNAMIC_LOADING_TEST_EXEC dynamic_loading_test)
-    set(RWLOCK_STATIC_INIT_TEST_EXEC rwlock_static_init)
+    set(TEST_EXECUTABLE_EXT ".so")
   endif()
+
+  set(CRYPTO_TEST_EXEC crypto_test${TEST_EXECUTABLE_EXT})
+  set(RANDOM_TEST_EXEC urandom_test${TEST_EXECUTABLE_EXT})
+  set(SSL_TEST_EXEC ssl_test${TEST_EXECUTABLE_EXT})
+  set(MEM_TEST_EXEC mem_test${TEST_EXECUTABLE_EXT})
+  set(MEM_SET_TEST_EXEC mem_set_test${TEST_EXECUTABLE_EXT})
+  set(INTEGRATION_TEST_EXEC integration_test${TEST_EXECUTABLE_EXT})
+  set(DYNAMIC_LOADING_TEST_EXEC dynamic_loading_test${TEST_EXECUTABLE_EXT})
+  set(RWLOCK_STATIC_INIT_TEST_EXEC rwlock_static_init${TEST_EXECUTABLE_EXT})
 
   add_subdirectory(util/fipstools/acvp/modulewrapper)
 
@@ -1051,7 +1051,7 @@ endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(HANDSHAKER_ARGS "-handshaker-path" $<TARGET_FILE:handshaker>)
-  set(SSL_TRANSFER_ARGS "-ssl-transfer-test-file" ${PROJECT_SOURCE_DIR}/ssl/test/runner/ssl_transfer/test_case_names.txt)
+  set(SSL_TRANSFER_ARGS "-ssl-transfer-test-file" ${AWSLC_SOURCE_DIR}/ssl/test/runner/ssl_transfer/test_case_names.txt)
   if(DEFINED ENV{AWS_LC_SSL_RUNNER_START_INDEX})
     set(AWS_LC_SSL_RUNNER_INDEX_FILTER "-test-case-start-index" $ENV{AWS_LC_SSL_RUNNER_START_INDEX})
   endif()
@@ -1078,11 +1078,11 @@ if(BUILD_TESTING)
   if(GO_EXECUTABLE)
     if(FIPS)
       if(MSVC)
-        set(ACVP_TOOL ${PROJECT_BINARY_DIR}/acvptool.exe)
-        set(TEST_WRAPPER ${PROJECT_BINARY_DIR}/testmodulewrapper.exe)
+        set(ACVP_TOOL ${AWSLC_BINARY_DIR}/acvptool.exe)
+        set(TEST_WRAPPER ${AWSLC_BINARY_DIR}/testmodulewrapper.exe)
       else()
-        set(ACVP_TOOL ${PROJECT_BINARY_DIR}/acvptool)
-        set(TEST_WRAPPER ${PROJECT_BINARY_DIR}/testmodulewrapper)
+        set(ACVP_TOOL ${AWSLC_BINARY_DIR}/acvptool)
+        set(TEST_WRAPPER ${AWSLC_BINARY_DIR}/testmodulewrapper)
       endif()
 
       # Read util/go_fips_tests.txt into a CMake variable.
@@ -1101,7 +1101,7 @@ if(BUILD_TESTING)
       # us hash anywhere from 1-8 gigabytes of memory, so running multiple at the same time cause a
       # failure on most machines due to a lack of memory.
       set(acvp_sha_test_commands)
-      file(GLOB acvp_sha_tests "${PROJECT_SOURCE_DIR}/util/fipstools/acvp/acvptool/test/sha-tests/*.json")
+      file(GLOB acvp_sha_tests "${AWSLC_SOURCE_DIR}/util/fipstools/acvp/acvptool/test/sha-tests/*.json")
       foreach(test_path ${acvp_sha_tests})
         get_filename_component(test_name ${test_path} NAME)
         list(APPEND acvp_sha_test_commands
@@ -1117,18 +1117,20 @@ if(BUILD_TESTING)
                 boringssl.googlesource.com/boringssl/util/fipstools/acvp/acvptool
         COMMAND ${GO_EXECUTABLE} build -o ${TEST_WRAPPER}
                 boringssl.googlesource.com/boringssl/util/fipstools/acvp/acvptool/testmodulewrapper
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
         DEPENDS modulewrapper
         ${MAYBE_USES_TERMINAL})
 
       add_custom_target(
         acvp_tests
+        COMMAND ${CMAKE_COMMAND} -E echo
+        COMMAND ${CMAKE_COMMAND} -E echo "Running ACVP tests"
         COMMAND ${GO_EXECUTABLE} run check_expected.go
                   -tool ${ACVP_TOOL}
                   -module-wrappers modulewrapper:$<TARGET_FILE:modulewrapper>,testmodulewrapper:${TEST_WRAPPER}
                   -tests tests.json
         ${acvp_sha_test_commands}
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/util/fipstools/acvp/acvptool/test
+        WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}/util/fipstools/acvp/acvptool/test
         DEPENDS build_acvp_tool
         ${MAYBE_USES_TERMINAL})
 
@@ -1145,7 +1147,7 @@ if(BUILD_TESTING)
       add_custom_target(
         macho_parser_tests
         COMMAND ./util/fipstools/inject_hash/macho_parser/tests/test_macho_parser
-        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+        WORKING_DIRECTORY ${AWSLC_BINARY_DIR}
         DEPENDS test_macho_parser
       )
       add_dependencies(fips_specific_tests_if_any macho_parser_tests)
@@ -1164,37 +1166,46 @@ if(BUILD_TESTING)
     if(BUILD_LIBSSL)
       add_custom_target(
           run_ssl_runner_tests
+          COMMAND ${CMAKE_COMMAND} -E echo "Running SSL tests"
           COMMAND cd ssl/test/runner &&
                   ${GO_EXECUTABLE} test -timeout ${GO_TEST_TIMEOUT} -shim-path $<TARGET_FILE:bssl_shim>
                     ${HANDSHAKER_ARGS} ${RUNNER_ARGS} ${AWS_LC_SSL_RUNNER_INDEX_FILTER} ${SSL_TRANSFER_ARGS}
-          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
           DEPENDS bssl_shim handshaker fips_specific_tests_if_any
           ${MAYBE_USES_TERMINAL})
 
       add_custom_target(
           run_ssl_runner_tests_valgrind
+          COMMAND ${CMAKE_COMMAND} -E echo "Running SSL tests"
           COMMAND cd ssl/test/runner &&
           ${GO_EXECUTABLE} test -timeout ${GO_TEST_TIMEOUT} -shim-path $<TARGET_FILE:bssl_shim> -valgrind
           ${HANDSHAKER_ARGS} ${RUNNER_ARGS} ${AWS_LC_SSL_RUNNER_INDEX_FILTER} ${SSL_TRANSFER_ARGS}
-          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
           DEPENDS bssl_shim handshaker fips_specific_tests_if_any
           ${MAYBE_USES_TERMINAL})
 
       add_custom_target(
           run_tests
+          COMMAND ${CMAKE_COMMAND} -E echo
+          COMMAND ${CMAKE_COMMAND} -E echo "Running Go tests"
           COMMAND ${GO_EXECUTABLE} test ${GO_TESTS}
+          COMMAND ${CMAKE_COMMAND} -E echo
+          COMMAND ${CMAKE_COMMAND} -E echo "Running unit tests"
           COMMAND ${GO_EXECUTABLE} run util/all_tests.go -build-dir
-                 ${PROJECT_BINARY_DIR}
-          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                 ${AWSLC_BINARY_DIR}
+          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
           DEPENDS all_tests run_ssl_runner_tests
           ${MAYBE_USES_TERMINAL})
     else()
       add_custom_target(
           run_tests
+          COMMAND ${CMAKE_COMMAND} -E echo "Running Go tests"
           COMMAND ${GO_EXECUTABLE} test ${GO_TESTS}
+          COMMAND ${CMAKE_COMMAND} -E echo
+          COMMAND ${CMAKE_COMMAND} -E echo "Running unit tests"
           COMMAND ${GO_EXECUTABLE} run util/all_tests.go -build-dir
-                  ${PROJECT_BINARY_DIR} -ssl-tests=false
-          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                  ${AWSLC_BINARY_DIR} -ssl-tests=false
+          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
           DEPENDS all_tests fips_specific_tests_if_any
           ${MAYBE_USES_TERMINAL}
       )
@@ -1203,16 +1214,16 @@ if(BUILD_TESTING)
     add_custom_target(
         run_tests_valgrind
         COMMAND ${GO_EXECUTABLE} run util/all_tests.go -build-dir
-                ${PROJECT_BINARY_DIR} -valgrind=true -valgrind-supp-dir="tests/ci"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                ${AWSLC_BINARY_DIR} -valgrind=true -valgrind-supp-dir="tests/ci"
+        WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
         DEPENDS all_tests
         ${MAYBE_USES_TERMINAL})
 
     add_custom_target(
         run_tests_with_sde
         COMMAND ${GO_EXECUTABLE} run util/all_tests.go -build-dir
-                ${PROJECT_BINARY_DIR} -sde=true -sde-path="$ENV{SDEROOT}/sde"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                ${AWSLC_BINARY_DIR} -sde=true -sde-path="$ENV{SDEROOT}/sde"
+        WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
         DEPENDS all_tests
         ${MAYBE_USES_TERMINAL})
   else()
@@ -1222,7 +1233,7 @@ if(BUILD_TESTING)
           COMMAND crypto_test
           COMMAND urandom_test
           COMMAND ssl_test
-          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
           DEPENDS all_tests
           ${MAYBE_USES_TERMINAL})
     else()
@@ -1230,7 +1241,7 @@ if(BUILD_TESTING)
           run_minimal_tests
           COMMAND crypto_test
           COMMAND urandom_test
-          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
           DEPENDS all_tests
           ${MAYBE_USES_TERMINAL}
       )
@@ -1270,7 +1281,7 @@ join_paths(libdir_for_pc_file "\${prefix}" "${CMAKE_INSTALL_LIBDIR}")
 join_paths(includedir_for_pc_file "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
 
 foreach(in_file ${OPENSSL_PKGCONFIGS})
-  file(RELATIVE_PATH in_file ${PROJECT_SOURCE_DIR} ${in_file})
+  file(RELATIVE_PATH in_file ${AWSLC_SOURCE_DIR} ${in_file})
   string(REPLACE ".in" "" pc_file ${in_file})
   configure_file(${in_file} ${CMAKE_CURRENT_BINARY_DIR}/${pc_file} @ONLY)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pc_file} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

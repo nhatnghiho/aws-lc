@@ -2305,8 +2305,18 @@ OPENSSL_EXPORT void X509_ALGOR_get0(const ASN1_OBJECT **out_obj,
 
 // X509_ALGOR_set_md sets |alg| to the hash function |md|. Note this
 // AlgorithmIdentifier represents the hash function itself, not a signature
-// algorithm that uses |md|.
-OPENSSL_EXPORT void X509_ALGOR_set_md(X509_ALGOR *alg, const EVP_MD *md);
+// algorithm that uses |md|. It returns one on success and zero on error.
+//
+// Due to historical specification mistakes (see Section 2.1 of RFC 4055), the
+// parameters field is sometimes omitted and sometimes a NULL value. When used
+// in RSASSA-PSS and RSAES-OAEP, it should be a NULL value. In other contexts,
+// the parameters should be omitted. This function assumes the caller is
+// constructing a RSASSA-PSS or RSAES-OAEP AlgorithmIdentifier and includes a
+// NULL parameter. This differs from OpenSSL's behavior.
+//
+// TODO(davidben): Rename this function, or perhaps just add a bespoke API for
+// constructing PSS and move on.
+OPENSSL_EXPORT int X509_ALGOR_set_md(X509_ALGOR *alg, const EVP_MD *md);
 
 // X509_ALGOR_cmp returns zero if |a| and |b| are equal, and some non-zero value
 // otherwise. Note this function can only be used for equality checks, not an
@@ -2721,6 +2731,11 @@ OPENSSL_EXPORT void X509_STORE_CTX_set_cert(X509_STORE_CTX *c, X509 *x);
 #define X509_V_ERR_INVALID_CALL 65
 #define X509_V_ERR_STORE_LOOKUP 66
 #define X509_V_ERR_NAME_CONSTRAINTS_WITHOUT_SANS 67
+// The following error codes are related to security levels in OpenSSL and are
+// unused in AWS-LC. See |SSL_CTX_set_security_level|.
+#define X509_V_ERR_EE_KEY_TOO_SMALL 68
+#define X509_V_ERR_CA_KEY_TOO_SMALL 69
+#define X509_V_ERR_CA_MD_TOO_WEAK 70
 
 // X509_STORE_CTX_get_error, after |X509_verify_cert| returns, returns
 // |X509_V_OK| if verification succeeded or an |X509_V_ERR_*| describing why
@@ -5060,7 +5075,7 @@ DECLARE_STACK_OF(DIST_POINT)
 struct x509_trust_st {
 int trust;
 int flags;
-int (*check_trust)(const X509_TRUST *, X509 *, int);
+int (*check_trust)(const X509_TRUST *, X509 *);
 char *name;
 int arg1;
 void *arg2;

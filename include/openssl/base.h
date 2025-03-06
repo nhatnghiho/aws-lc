@@ -122,7 +122,7 @@ extern "C" {
 // ServiceIndicatorTest.AWSLCVersionString
 // Note: there are two versions of this test. Only one test is compiled
 // depending on FIPS mode.
-#define AWSLC_VERSION_NUMBER_STRING "1.41.1"
+#define AWSLC_VERSION_NUMBER_STRING "1.48.0"
 
 #if defined(BORINGSSL_SHARED_LIBRARY)
 
@@ -147,7 +147,7 @@ extern "C" {
 #else  // defined(BORINGSSL_SHARED_LIBRARY)
 
 #if defined(OPENSSL_WINDOWS)
-#define OPENSSL_EXPORT __declspec(dllexport)
+#define OPENSSL_EXPORT
 #else
 #define OPENSSL_EXPORT __attribute__((visibility("default")))
 #endif
@@ -197,6 +197,13 @@ extern "C" {
 #endif
 #else
 #define OPENSSL_PRINTF_FORMAT_FUNC(string_index, first_to_check)
+#endif
+
+// OPENSSL_CLANG_PRAGMA emits a pragma on clang and nothing on other compilers.
+#if defined(__clang__)
+#define OPENSSL_CLANG_PRAGMA(arg) _Pragma(arg)
+#else
+#define OPENSSL_CLANG_PRAGMA(arg)
 #endif
 
 // OPENSSL_MSVC_PRAGMA emits a pragma on MSVC and nothing on other compilers.
@@ -345,6 +352,7 @@ typedef struct kem_key_st KEM_KEY;
 typedef struct evp_pkey_ctx_st EVP_PKEY_CTX;
 typedef struct evp_pkey_asn1_method_st EVP_PKEY_ASN1_METHOD;
 typedef struct evp_pkey_st EVP_PKEY;
+typedef struct evp_pkey_ctx_signature_context_params_st EVP_PKEY_CTX_SIGNATURE_CONTEXT_PARAMS;
 typedef struct hmac_ctx_st HMAC_CTX;
 typedef struct md4_state_st MD4_CTX;
 typedef struct md5_state_st MD5_CTX;
