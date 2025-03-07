@@ -12,7 +12,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
 
     - identifier: c99_cplusplus98_checker # The checker script runs on gcc.
       buildspec: ./tests/ci/codebuild/common/run_simple_target.yml
@@ -20,7 +20,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/coding_guidelines/c99_cplusplus98_test.sh"
 
@@ -30,7 +30,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-16.04_gcc-5x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-16.04_gcc-5x_latest
         variables:
           AWSLC_32BIT: 1
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
@@ -41,7 +41,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_clang-6x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_clang-6x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -51,7 +51,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_clang-6x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_clang-6x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -61,7 +61,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -71,7 +71,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -81,7 +81,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -91,7 +91,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -101,7 +101,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -111,7 +111,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -121,7 +121,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_intel-sde_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_intel-sde_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_tests_with_sde.sh"
 
@@ -131,7 +131,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_clang-14x-sde_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_clang-14x-sde_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_tests_with_sde_asan.sh"
 
@@ -141,7 +141,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-10x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-10x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -151,7 +151,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-10x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-10x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -161,7 +161,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -171,7 +171,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -181,7 +181,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_prefix_tests.sh"
 
@@ -191,7 +191,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -201,7 +201,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -211,7 +211,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -221,7 +221,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-7x_latest
         variables:
           AWSLC_NO_ASM_FIPS: 1
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
@@ -232,7 +232,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -242,7 +242,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -252,7 +252,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -262,7 +262,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -272,7 +272,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -282,7 +282,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -292,7 +292,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
         variables:
           AWSLC_32BIT: 1
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
@@ -303,7 +303,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -313,7 +313,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -323,7 +323,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-8_gcc-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-8_gcc-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -333,7 +333,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-8_gcc-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-8_gcc-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -344,7 +344,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -354,7 +354,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -364,7 +364,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_clang-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_clang-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -374,7 +374,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_clang-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_clang-7x_latest
         variables:
           # AL2 Clang-7 does not support AddressSanitizer. Related ticket is linked in CryptoAlg-694.
           # https://github.com/aws/aws-lc/pull/120#issuecomment-808439279
@@ -387,7 +387,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_clang-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_clang-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_prefix_tests.sh"
 
@@ -397,7 +397,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_valgrind_tests.sh"
 
@@ -407,7 +407,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_ssl_runner_valgrind_tests.sh"
 
@@ -417,7 +417,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -427,7 +427,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_gcc-11x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -437,7 +437,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_tests.sh"
 
@@ -447,7 +447,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_fips_tests.sh"
 
@@ -457,7 +457,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_sanitizer_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2023_clang-15x_sanitizer_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_posix_sanitizers.sh"
 
@@ -467,7 +467,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_install_shared_and_static.sh"
 
@@ -477,7 +477,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:fedora-31_clang-9x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:fedora-31_clang-9x_latest
 
     # We parallel the quick check proof scripts.
     # Since each proof script takes around 7GB of memory, this results in a high demand for memory.
@@ -490,7 +490,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_formal-verification-saw-x86_64_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_formal-verification-saw-x86_64_latest
         variables:
           DOCKER_ENTRYPOINT: SAW/scripts/x86_64/docker_entrypoint.sh
 
@@ -501,7 +501,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_formal-verification-saw-x86_64-aes-gcm_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_formal-verification-saw-x86_64-aes-gcm_latest
         variables:
           DOCKER_ENTRYPOINT: SAW/scripts/x86_64/docker_entrypoint_aes_gcm.sh
 
@@ -512,7 +512,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_formal-verification-saw-aarch64_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-10x_formal-verification-saw-aarch64_latest
         variables:
           DOCKER_ENTRYPOINT: SAW/scripts/aarch64/docker_entrypoint.sh
 
@@ -523,7 +523,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_clang-14x_formal-verification-nsym-aarch64_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_clang-14x_formal-verification-nsym-aarch64_latest
         variables:
           DOCKER_ENTRYPOINT: NSym/scripts/docker_entrypoint.sh
 
@@ -534,7 +534,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:amazonlinux-2_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -544,7 +544,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:centos-7_gcc-4x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -554,7 +554,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-16.04_gcc-5x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-16.04_gcc-5x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -564,7 +564,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-7x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-7x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -574,7 +574,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_gcc-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -584,7 +584,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_clang-6x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-18.04_clang-6x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -594,7 +594,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-8x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -604,7 +604,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-20.04_clang-9x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_minimal_tests.sh"
 
@@ -614,7 +614,7 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_clang-14x-sde_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_clang-14x-sde_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_benchmark_build_tests.sh"
 
@@ -624,6 +624,6 @@ batch:
         type: LINUX_CONTAINER
         privileged-mode: true
         compute-type: BUILD_GENERAL1_SMALL
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-10.04_gcc-4.1x_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-10.04_gcc-4.1x_latest
         variables:
           AWS_LC_CI_TARGET: "tests/ci/run_legacy_build.sh"
