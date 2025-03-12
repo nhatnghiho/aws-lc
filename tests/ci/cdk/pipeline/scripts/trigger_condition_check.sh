@@ -4,7 +4,7 @@
 
 set -exuo pipefail
 
-source ../../../util/common.sh
+source ../../util/common.sh
 
 COMMIT_HASH=${COMMIT_HASH:-$CODEBUILD_RESOLVED_SOURCE_VERSION}
 LINUX_DOCKER_PATHS="tests/ci/docker_images/(dependencies|linux)"

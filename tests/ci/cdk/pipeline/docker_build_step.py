@@ -59,10 +59,9 @@ class DockerBuildStep(pipelines.Step):
                        codeBuildDefaults=None,
                        beforeSelfMutation=None,
                        stack_outputs_map: pipelines.StackOutputsMap):
-
         docker_build_project = codebuild.PipelineProject(
             scope,
-            f"{self.name_prefix}-DockerImageBuild",
+            f"{self.name_prefix}-StartWait",
             build_spec=codebuild.BuildSpec.from_object({
                 "version": "0.2",
                 "env": {
@@ -73,21 +72,23 @@ class DockerBuildStep(pipelines.Step):
                 "phases": {
                     "build": {
                         "commands": [
-                            "cd tests/ci/cdk/cdk/pipeline/scripts",
+                            "cd tests/ci/cdk/pipeline/scripts",
                             "chmod +x trigger_condition_check.sh",
                             "chmod +x build_target.sh",
-                            "./trigger_condition_check.sh --build-type docker --platform ${PLATFORM} --stacks \"${STACKS}\"",
-                            "./build_target.sh --build-type docker --platform ${PLATFORM} --max-retry ${MAX_RETRY} --timeout ${TIMEOUT}"
+                            "trigger_conditions=$(./trigger_condition_check.sh --build-type docker --platform ${PLATFORM} --stacks \"${STACKS}\")",
+                            "export NEED_REBUILD=$(echo $trigger_conditions | grep 'NEED_REBUILD=' | cut -d'=' -f2 )",
+                            "./build_target.sh --build-type docker --platform ${PLATFORM} --max-retry ${MAX_RETRY} --timeout ${TIMEOUT}",
+                            "echo \"NEED_REBUILD value is: ${NEED_REBUILD}\"",
                         ]
                     }
                 }
             }),
             role=self.role,
-            project_name=f"{self.name_prefix}-DockerImageBuild"
+            project_name=f"{self.name_prefix}-StartWait"
         )
 
         docker_build_action = cp_actions.CodeBuildAction(
-            action_name=f"{self.name_prefix}-DockerImageBuild",
+            action_name=f"{self.name_prefix}-StartWait",
             # input=artifacts.to_code_pipeline(self.input.primary_output),
             input=artifacts.to_code_pipeline(self.input),
             run_order=run_order,
@@ -98,10 +99,10 @@ class DockerBuildStep(pipelines.Step):
                 "STACKS": codebuild.BuildEnvironmentVariable(value=" ".join(self.stacks)),
                 "MAX_RETRY": codebuild.BuildEnvironmentVariable(value=self.max_retry),
                 "TIMEOUT": codebuild.BuildEnvironmentVariable(value=self.timeout),
+                # "NEED_REBUILD": codebuild.BuildEnvironmentVariable(value=999)
             },
             outputs=[codepipeline.Artifact()],
-            # variables_namespace=f'{self.name_prefix}-DockerImageBuild',
-            variables_namespace=f'{self.name_prefix}-DockerImageBuild',
+            variables_namespace=f'{self.name_prefix}-StartWait',
         )
 
         stage.add_action(docker_build_action)

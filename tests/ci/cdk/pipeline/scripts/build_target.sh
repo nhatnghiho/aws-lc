@@ -4,7 +4,7 @@
 
 set -exuo pipefail
 
-source ../../../util/common.sh
+source ../../util/common.sh
 
 echo \"Environment variables:\"
 env
@@ -139,7 +139,7 @@ if [[ -z ${BUILD_TYPE} ]]; then
   exit 1
 fi
 
-assume_role
+assume_role "arn:aws:iam::${DEPLOY_ACCOUNT}:role/CrossAccountCodeBuildRole" "pipeline-${COMMIT_HASH}"
 
 if [[ -z "${BUILD_TYPE+x}" || -z "${BUILD_TYPE}" ]]; then
   echo "No build type provided."

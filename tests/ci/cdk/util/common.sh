@@ -36,6 +36,12 @@ function start_codebuild_project() {
   return 0
 }
 
+function retry_batch_build() {
+  build_id=$(aws codebuild retry-build-batch --id ${BUILD_BATCH_ID} \
+                                             --retry-type ${commit_hash})eiifcbncutcrtniigirjvrkeituvnknrhgrllffchkrl
+
+}
+
 function codebuild_build_status_check() {
   # Every 5 min, this function checks if the linux docker image batch code build finished successfully.
   # Normally, docker img build can take up to 1 hour. By default, we wait up to 30 * 5 min.
@@ -43,7 +49,8 @@ function codebuild_build_status_check() {
   local status_check_max=$((timeout / 5))
   for i in $(seq 1 ${status_check_max}); do
     # https://docs.aws.amazon.com/cli/latest/reference/codebuild/batch-get-build-batches.html
-    build_batch_status=$(aws codebuild batch-get-build-batches --ids "${BUILD_BATCH_ID}" | jq -r '.buildBatches[0].buildBatchStatus')
+#    build_batch_status=$(aws codebuild batch-get-build-batches --ids "${BUILD_BATCH_ID}" | jq -r '.buildBatches[0].buildBatchStatus')
+    build_batch_status=$(aws codebuild batch-get-build-batches --ids "${BUILD_BATCH_ID}" --query ".buildBatches[0].buildBatchStatus")
     if [[ ${build_batch_status} == 'SUCCEEDED' ]]; then
       echo "Build ${BUILD_BATCH_ID} finished successfully."
       return 0

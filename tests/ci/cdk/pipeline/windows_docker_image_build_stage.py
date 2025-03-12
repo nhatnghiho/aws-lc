@@ -1,16 +1,13 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0 OR ISC
 
-from aws_cdk import Stage, aws_codebuild as codebuild, Environment, Stack, aws_iam as iam, pipelines
+from aws_cdk import Stage, Environment, Stack, aws_iam as iam, pipelines
 from constructs import Construct
 
 from cdk.ecr_stack import EcrStack
-from cdk.pipeline.codebuild_run_step import CodeBuildRunStep
-from cdk.pipeline.deploy_util import DeployEnvironmentType
-from cdk.pipeline.docker_build_step import DockerBuildStep
-from cdk.windows_docker_image_build_stack import WindowsDockerImageBuildStack
-from util.metadata import LINUX_X86_ECR_REPO, LINUX_AARCH_ECR_REPO, WINDOWS_X86_ECR_REPO, AWS_ACCOUNT, AWS_REGION, \
-    PIPELINE_ACCOUNT
+from pipeline.deploy_util import DeployEnvironmentType
+from pipeline.docker_build_step import DockerBuildStep
+from util.metadata import WINDOWS_X86_ECR_REPO, AWS_ACCOUNT, AWS_REGION
 
 
 class WindowsDockerImageBuildStage(Stage):
@@ -53,7 +50,7 @@ class WindowsDockerImageBuildStage(Stage):
             wave: pipelines.Wave,
             input: pipelines.FileSet,
             role: iam.Role,
-            deploy_environment: DeployEnvironmentType,
+            deploy_environment: str,
             max_retry: int=2,
             additional_stacks: list[Construct]=[],
             env=None,
@@ -64,9 +61,9 @@ class WindowsDockerImageBuildStage(Stage):
             self,
             post=[
                 DockerBuildStep(
-                    f"{deploy_environment.value}-WindowsDockerBuild",
+                    f"{self.stage_name}-BuildStep",
+                    name_prefix=self.stage_name,
                     input=input,
-                    name_prefix=f"{deploy_environment.value}-Windows",
                     stacks=[stack.stack_name for stack in stacks],
                     platform="windows",
                     max_retry=max_retry,

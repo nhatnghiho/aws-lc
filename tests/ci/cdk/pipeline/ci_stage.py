@@ -9,8 +9,8 @@ from cdk.aws_lc_android_ci_stack import AwsLcAndroidCIStack
 from cdk.aws_lc_ec2_test_framework_ci_stack import AwsLcEC2TestingCIStack
 from cdk.aws_lc_github_ci_stack import AwsLcGitHubCIStack
 from cdk.aws_lc_github_fuzz_ci_stack import AwsLcGitHubFuzzCIStack
-from cdk.pipeline.codebuild_run_step import CodeBuildRunStep, BatchBuildTargetOptions
-from cdk.pipeline.deploy_util import DeployEnvironmentType
+from pipeline.codebuild_run_step import CodeBuildRunStep, BatchBuildTargetOptions
+from pipeline.deploy_util import DeployEnvironmentType
 from util.metadata import AWS_ACCOUNT, AWS_REGION
 
 
@@ -150,7 +150,7 @@ class CiStage(Stage):
             pipeline: pipelines.CodePipeline,
             input: pipelines.FileSet,
             role: iam.Role,
-            deploy_environment: DeployEnvironmentType,
+            deploy_environment: str,
             max_retry: int=0,
             env=None,
     ):
@@ -158,9 +158,9 @@ class CiStage(Stage):
             self,
             post=[
                 CodeBuildRunStep(
-                    f"{deploy_environment.value}-CiTests",
+                    f"{self.stage_name}-BuildStep",
+                    name_prefix=self.stage_name,
                     input=input,
-                    name_prefix=f"{deploy_environment.value}-CiTests",
                     stacks=[stack.stack_name for stack in self.stacks],
                     build_targets=self.build_targets,
                     max_retry=max_retry,

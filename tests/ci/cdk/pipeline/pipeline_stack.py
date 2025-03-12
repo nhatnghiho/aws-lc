@@ -5,22 +5,18 @@ from aws_cdk import Stack, Environment
 from aws_cdk import (
     pipelines,
     aws_codestarconnections as codestarconnections,
-    aws_codebuild as codebuild,
     aws_codepipeline as codepipeline,
     aws_iam as iam,
     aws_events as events,
     aws_events_targets as targets,
 )
-from aws_cdk.aws_s3_assets import Asset
-from aws_cdk.pipelines import CodeBuildStep
 from constructs import Construct
 
-from cdk.pipeline.ci_stage import CiStage
-from cdk.pipeline.codebuild_run_step import CodeBuildRunStep
-from cdk.pipeline.deploy_util import DeployEnvironmentType
-from cdk.pipeline.linux_docker_image_build_stage import LinuxDockerImageBuildStage
-from cdk.pipeline.setup_stage import SetupStage
-from cdk.pipeline.windows_docker_image_build_stage import WindowsDockerImageBuildStage
+from pipeline.ci_stage import CiStage
+from pipeline.deploy_util import DeployEnvironmentType
+from pipeline.linux_docker_image_build_stage import LinuxDockerImageBuildStage
+from pipeline.setup_stage import SetupStage
+from pipeline.windows_docker_image_build_stage import WindowsDockerImageBuildStage
 from util.metadata import (
     AWS_ACCOUNT,
     AWS_REGION,
@@ -85,7 +81,7 @@ class AwsLcCiPipeline(Stack):
         # Create a base pipeline to upgrade the default pipeline type
         base_pipeline = codepipeline.Pipeline(
             self,
-            "BasePipeline",
+            "AwsLcCiPipeline",
             execution_mode=codepipeline.ExecutionMode.QUEUED,
             pipeline_type=codepipeline.PipelineType.V2,
             pipeline_name="AwsLcCiPipeline",
@@ -96,7 +92,7 @@ class AwsLcCiPipeline(Stack):
 
         pipeline = pipelines.CodePipeline(
             self,
-            "AwsLcCiPipeline",
+            "CdkPipeline",
             code_pipeline=base_pipeline,
             # pipeline_name="AwsLcCiPipeline",
             synth=pipelines.ShellStep(
@@ -175,7 +171,7 @@ class AwsLcCiPipeline(Stack):
         #     )
         # )
         
-        deploy_environment = DeployEnvironmentType.PRE_PROD
+        deploy_environment = DeployEnvironmentType.PRE_PROD.value
 
         setup_stage = SetupStage(
             self,
@@ -279,7 +275,7 @@ class AwsLcCiPipeline(Stack):
                 "PIPELINE_EXECUTION_ID": "#{codepipeline.PipelineExecutionId}",
                 "DEPLOY_ACCOUNT": AWS_ACCOUNT,
                 "DEPLOY_REGION": AWS_REGION,
-                "PREVIOUS_REBUILDS": "#{Staging-Linux-DockerImageBuild.NEED_REBUILD} #{Staging-Linux-DockerImageBuild.NEED_REBUILD}",
+                "PREVIOUS_REBUILDS": f"#{{{linux_stage.stage_name}-StartWait.NEED_REBUILD}} #{{{linux_stage.stage_name}-StartWait.NEED_REBUILD}}",
             },
         )
 

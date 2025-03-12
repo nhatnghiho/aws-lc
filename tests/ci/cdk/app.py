@@ -12,7 +12,7 @@ from cdk.aws_lc_github_ci_stack import AwsLcGitHubCIStack
 from cdk.aws_lc_github_fuzz_ci_stack import  AwsLcGitHubFuzzCIStack
 from cdk.aws_lc_ec2_test_framework_ci_stack import AwsLcEC2TestingCIStack
 from cdk.linux_docker_image_batch_build_stack import LinuxDockerImageBatchBuildStack
-from cdk.pipeline_stack import AwsLcCiPipeline
+from pipeline.pipeline_stack import AwsLcCiPipeline
 from cdk.windows_docker_image_build_stack import WindowsDockerImageBuildStack
 from util.metadata import AWS_ACCOUNT, AWS_REGION, PIPELINE_ACCOUNT, PIPELINE_REGION
 

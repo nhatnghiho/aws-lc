@@ -4,7 +4,7 @@
 
 set -exuo pipefail
 
-source ./util/common.sh
+source util/common.sh
 
 # -e: Exit on any failure
 # -x: Print the command before running

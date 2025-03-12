@@ -75,7 +75,7 @@ class CodeBuildRunStep(pipelines.Step):
                        stack_outputs_map: pipelines.StackOutputsMap):
         trigger_condition_check_project = codebuild.PipelineProject(
             scope,
-            f"{self.name_prefix}-TriggerConditionCheck",
+            f"{self.name_prefix}-PrebuildCheck",
             build_spec=codebuild.BuildSpec.from_object({
                 "version": "0.2",
                 "env": {
@@ -86,15 +86,16 @@ class CodeBuildRunStep(pipelines.Step):
                 "phases": {
                     "build": {
                         "commands": [
-                            "cd tests/ci/cdk/cdk/pipeline/scripts",
+                            "cd tests/ci/cdk/pipeline/scripts",
                             "chmod +x trigger_condition_check.sh",
-                            "./trigger_condition_check.sh --build-type ci --stacks \"${STACKS}\""
+                            "trigger_conditions=$(./trigger_condition_check.sh --build-type ci --stacks \"${STACKS}\")",
+                            "export NEED_REBUILD=$(echo $trigger_conditions | grep 'NEED_REBUILD=' | cut -d'=' -f2 )"
                         ]
                     }
                 },
             }),
             role=self.role,
-            project_name=f"{self.name_prefix}-TriggerConditionCheck"
+            project_name=f"{self.name_prefix}-PrebuildCheck"
         )
 
         batch_build_jobs = [
@@ -123,7 +124,7 @@ class CodeBuildRunStep(pipelines.Step):
                 "phases": {
                     "build": {
                         "commands": [
-                            "cd tests/ci/cdk/cdk/pipeline/scripts",
+                            "cd tests/ci/cdk/pipeline/scripts",
                             "chmod +x build_target.sh",
                             "./build_target.sh --build-type ci \
                                                  --project ${PROJECT} \
@@ -155,9 +156,10 @@ class CodeBuildRunStep(pipelines.Step):
                 **self.env,
                 "PLATFORM": codebuild.BuildEnvironmentVariable(value=self.platform),
                 "STACKS": codebuild.BuildEnvironmentVariable(value=" ".join(self.stacks)),
+                # "NEED_REBUILD": codebuild.BuildEnvironmentVariable(value=999)
             },
             outputs=[codepipeline.Artifact()],
-            variables_namespace=f'{self.name_prefix}-TriggerConditionCheck',
+            variables_namespace=f'{self.name_prefix}-PrebuildCheck',
         )
 
         stage.add_action(prebuild_check_action)
@@ -175,7 +177,7 @@ class CodeBuildRunStep(pipelines.Step):
                 "PLATFORM": codebuild.BuildEnvironmentVariable(value=self.platform),
                 "MAX_RETRY": codebuild.BuildEnvironmentVariable(value=self.max_retry),
                 "NEED_REBUILD": codebuild.BuildEnvironmentVariable(
-                    value=f"#{{{self.name_prefix}-TriggerConditionCheck.NEED_REBUILD}}")
+                    value=f"#{{{self.name_prefix}-PrebuildCheck.NEED_REBUILD}}")
             },
         )
 
