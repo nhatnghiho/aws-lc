@@ -128,7 +128,6 @@ class WindowsDockerImageBuildStack(Stack):
             vpc=vpc,
             role=role,
             block_devices=[block_device],
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             machine_image=machine_image,
             user_data=setup_user_data,
             instance_name="{}-instance".format(id),

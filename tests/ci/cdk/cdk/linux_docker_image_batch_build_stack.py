@@ -88,14 +88,10 @@ class LinuxDockerImageBatchBuildStack(Stack):
             ),
         }
 
-        # Define VPC
-        vpc = ec2.Vpc(self, id="{}-ec2-vpc".format(id))
-
         # Define CodeBuild project.
         project = codebuild.Project(
             scope=self,
             id=id,
-            vpc=vpc,
             project_name=id,
             source=git_hub_source,
             environment=codebuild.BuildEnvironment(
