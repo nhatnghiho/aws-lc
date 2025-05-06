@@ -39,12 +39,14 @@ function install_expat() {
 
 function unbound_build() {
   pushd "${UNBOUND_SRC_FOLDER}"
-  install_expat
+#  install_expat
+# ONLY HERE TO AVOID AN EXTRA MCM. SHOULD BE REMOVED ONCE PIPELINE IS LIVE
+  apt-get update && apt-get install -y dnsutils libexpat1-dev ldnsutils
   CFLAGS='-Wno-deprecated-declarations' ./configure --disable-ed448 \
               --prefix="${UNBOUND_BUILD_PREFIX}" \
               --exec-prefix="${UNBOUND_BUILD_EPREFIX}" \
               --with-ssl="${AWS_LC_INSTALL_FOLDER}" \
-              --with-libexpat="$IOS_PREFIX"
+#              --with-libexpat="$IOS_PREFIX"
   make -j "${NUM_CPU_THREADS}"
   make -j install
 
@@ -108,7 +110,8 @@ function unbound_parse_test_results() {
 
 function unbound_run_tests() {
   export PATH="${UNBOUND_BUILD_EPREFIX}/sbin/:$PATH"
-  local results=$(make longtest)
+  make longtest VERBOSE=1
+  local results=$(make longtest VERBOSE=1)
   unbound_parse_test_results output
   popd
 }
