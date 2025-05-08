@@ -515,10 +515,10 @@ batch:
           AWS_LC_CI_TARGET: "tests/ci/integration/run_xtrabackup_integration.sh"
 
     - identifier: unbound_integration_x86_64
-      buildspec: tests/ci/codebuild/common/run_simple_target.yml
+      buildspec: tests/ci/codebuild/common/run_ipv6_target.yml
       env:
         type: LINUX_CONTAINER
-        privileged-mode: false
+        privileged-mode: true
         compute-type: BUILD_GENERAL1_MEDIUM
         image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-linux-x86:ubuntu-22.04_gcc-12x_integration_latest
         variables:

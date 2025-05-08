@@ -41,7 +41,7 @@ function unbound_build() {
   pushd "${UNBOUND_SRC_FOLDER}"
 #  install_expat
 # ONLY HERE TO AVOID AN EXTRA MCM. SHOULD BE REMOVED ONCE PIPELINE IS LIVE
-  apt-get update && apt-get install -y dnsutils libexpat1-dev ldnsutils
+  apt-get update && apt-get install -y dnsutils libexpat1-dev ldnsutils xxd splint doxygen netcat-openbsd
   CFLAGS='-Wno-deprecated-declarations' ./configure --disable-ed448 \
               --prefix="${UNBOUND_BUILD_PREFIX}" \
               --exec-prefix="${UNBOUND_BUILD_EPREFIX}" \
@@ -56,8 +56,7 @@ function unbound_build() {
 }
 
 function unbound_parse_test_results() {
-  PERMITTED_FAILS="01-doc
-  stat_values"
+  PERMITTED_FAILS=("stat_values")
 
   results=$(echo "$1" | sed -n "/Minitdir Report/,\$p")
   echo "$results"
@@ -83,9 +82,6 @@ function unbound_parse_test_results() {
 
   # Print results
   echo -e "\n=== Test Results Summary ==="
-  echo "Passed tests (${#passed[@]}):"
-  printf '%s\n' "${passed[@]}"
-
   echo -e "\nSkipped tests (${#skipped[@]}):"
   printf '%s\n' "${skipped[@]}"
 
@@ -110,9 +106,8 @@ function unbound_parse_test_results() {
 
 function unbound_run_tests() {
   export PATH="${UNBOUND_BUILD_EPREFIX}/sbin/:$PATH"
-  make longtest VERBOSE=1
   local results=$(make longtest VERBOSE=1)
-  unbound_parse_test_results output
+  unbound_parse_test_results "$results"
   popd
 }
 
