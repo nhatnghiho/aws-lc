@@ -89,7 +89,12 @@ class LinuxDockerImageBatchBuildStack(Stack):
         }
 
         # Define VPC
-        vpc = ec2.Vpc(self, id="{}-ec2-vpc".format(id))
+        vpc = ec2.Vpc(
+            self,
+            id="{}-ec2-vpc".format(id),
+            nat_gateways=1,
+            # max_azs=1
+        )
 
         # Define CodeBuild project.
         project = codebuild.Project(
