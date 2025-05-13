@@ -4172,6 +4172,7 @@ struct ssl_st {
   // is immutable.
   bssl::UniquePtr<SSL_SESSION> session;
 
+
   // client_cipher_suites contains cipher suites offered by the client during
   // the handshake and that are supported by this library, with preference order
   // maintained. This field is NOT serialized and is only populated if used in
@@ -4197,6 +4198,10 @@ struct ssl_st {
 
   // extra application data
   CRYPTO_EX_DATA ex_data;
+
+  // verify_result is the result of certificate verification in the case of
+  // non-fatal certificate errors.
+  long verify_result = X509_V_ERR_INVALID_CALL;
 
   uint32_t options = 0;  // protocol behaviour
   uint32_t mode = 0;     // API behaviour
