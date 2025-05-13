@@ -97,19 +97,20 @@ class AwsLcEC2TestingCIStack(AwsLcBaseCiStack):
             self,
             id="{}-ec2-vpc".format(id),
             nat_gateways=1,
-            allow_all_outbound=True
+            restrict_default_security_group=True # disable inbound and outbound
         )
 
         selected_subnets = vpc.select_subnets(
             subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
         )
 
-        # security_group = ec2.SecurityGroup.from_security_group_id(
-        #     self,
-        #     id=vpc.vpc_default_security_group,
-        #     security_group_id=vpc.vpc_default_security_group,
-        #     allow_all_outbound=True # re-enable outbound rules
-        # )
+        security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            id=vpc.vpc_default_security_group,
+            security_group_id=vpc.vpc_default_security_group,
+            vpc=vpc,
+            allow_all_outbound=True # re-enable outbound rules
+        )
 
         # create security group with default rules
         # security_group = ec2.SecurityGroup(
@@ -127,8 +128,8 @@ class AwsLcEC2TestingCIStack(AwsLcBaseCiStack):
         ec2_policy = iam.PolicyDocument.from_json(
             ec2_policies_in_json(
                 ec2_role.role_name,
-                # security_group.security_group_id,
-                vpc.vpc_default_security_group,
+                security_group.security_group_id,
+                # vpc.vpc_default_security_group,
                 selected_subnets.subnets[0].subnet_id,
                 vpc.vpc_id,
                 env,
@@ -168,8 +169,8 @@ class AwsLcEC2TestingCIStack(AwsLcBaseCiStack):
             build_spec=BuildSpecLoader.load(spec_file_path, env),
             environment_variables={
                 "EC2_SECURITY_GROUP_ID": codebuild.BuildEnvironmentVariable(
-                    value=vpc.vpc_default_security_group
-                    # value=security_group.security_group_id
+                    # value=vpc.vpc_default_security_group
+                    value=security_group.security_group_id
                 ),
                 "EC2_SUBNET_ID": codebuild.BuildEnvironmentVariable(
                     value=selected_subnets.subnets[0].subnet_id
