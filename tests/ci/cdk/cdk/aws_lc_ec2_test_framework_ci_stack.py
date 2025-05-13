@@ -104,22 +104,22 @@ class AwsLcEC2TestingCIStack(AwsLcBaseCiStack):
             subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
         )
 
-        security_group = ec2.SecurityGroup.from_security_group_id(
-            self,
-            id=vpc.vpc_default_security_group,
-            security_group_id=vpc.vpc_default_security_group,
-            vpc=vpc,
-            allow_all_outbound=True # re-enable outbound rules
-        )
+        # security_group = ec2.SecurityGroup.from_security_group_id(
+        #     self,
+        #     id=vpc.vpc_default_security_group,
+        #     security_group_id=vpc.vpc_default_security_group,
+        #     # vpc=vpc,
+        #     allow_all_outbound=True # re-enable outbound rules
+        # )
 
         # create security group with default rules
-        # security_group = ec2.SecurityGroup(
-        #     self,
-        #     id="{}-ec2-sg".format(id),
-        #     allow_all_outbound=True,
-        #     vpc=vpc,
-        #     security_group_name="codebuild_ec2_sg",
-        # )
+        security_group = ec2.SecurityGroup(
+            self,
+            id="{}-ec2-sg".format(id),
+            allow_all_outbound=True,
+            vpc=vpc,
+            security_group_name="codebuild_ec2_sg",
+        )
 
         # Define a IAM role for this stack.
         code_build_batch_policy = iam.PolicyDocument.from_json(
