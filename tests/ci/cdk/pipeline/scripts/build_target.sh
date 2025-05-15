@@ -161,7 +161,7 @@ if [[ ${BUILD_TYPE} == "docker" ]]; then
   fi
 
   if [[ ${PLATFORM} == "linux" ]]; then
-#    build_linux_docker_images
+    build_linux_docker_images
      echo "Hello"
   elif [[ ${PLATFORM} == "windows" ]]; then
     build_win_docker_images
