@@ -25,7 +25,7 @@ mainSteps:
     - cd .\aws-lc\tests\ci\docker_images\windows
     - git checkout GITHUB_SOURCE_VERSION_PLACEHOLDER
     - Invoke-Expression -Command (Get-ECRLoginCommand -Region REGION_PLACEHOLDER).Command
-    - .\build_images.ps1
+    - powershell.exe -ExecutionPolicy Bypass -File build_images.ps1; exit $LASTEXITCODE
     - .\push_images.ps1 ECR_PLACEHOLDER
 parameters:
   TriggerType:

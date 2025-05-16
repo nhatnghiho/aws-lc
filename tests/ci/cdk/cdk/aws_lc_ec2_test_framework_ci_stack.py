@@ -96,8 +96,8 @@ class AwsLcEC2TestingCIStack(AwsLcBaseCiStack):
         vpc = ec2.Vpc(
             self,
             id="{}-ec2-vpc".format(id),
-            # nat_gateways=1,
-            max_azs=1,
+            nat_gateways=1,
+            # max_azs=1,
         )
 
         selected_subnets = vpc.select_subnets(
