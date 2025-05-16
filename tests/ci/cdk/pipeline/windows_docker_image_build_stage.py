@@ -12,7 +12,7 @@ from util.metadata import (
     WINDOWS_X86_ECR_REPO,
     WIN_EC2_TAG_KEY,
     WIN_EC2_TAG_VALUE,
-    SSM_DOCUMENT_NAME,
+    SSM_DOCUMENT_NAME, PROD_ACCOUNT,
 )
 
 
@@ -70,32 +70,48 @@ class WindowsDockerImageBuildStage(Stage):
         stack_names = [stack.stack_name for stack in stacks]
 
         env = env if env else {}
-        timeout = (max_retry + 1) * 120
 
-        docker_build_step = CodeBuildStep(
-            "StartWait",
-            input=input,
-            commands=[
-                "cd tests/ci/cdk/pipeline/scripts",
-                './cleanup_orphaned_images.sh --repos "${ECR_REPOS}"',
-                'trigger_conditions=$(./check_trigger_conditions.sh --build-type docker --platform windows --stacks "${STACKS}")',
-                "export NEED_REBUILD=$(echo $trigger_conditions | sed -n -e 's/.*\(NEED_REBUILD=[0-9]*\).*/\\1/p' | cut -d'=' -f2 )",
-                "./build_target.sh --build-type docker --platform windows --max-retry ${MAX_RETRY} --timeout ${TIMEOUT}",
-            ],
-            env={
-                **env,
-                "STACKS": " ".join(stack_names),
-                "ECR_REPOS": " ".join(self.ecr_repo_names),
-                "MAX_RETRY": str(max_retry),
-                "TIMEOUT": str(timeout),
-                "WIN_EC2_TAG_KEY": WIN_EC2_TAG_KEY,
-                "WIN_EC2_TAG_VALUE": WIN_EC2_TAG_VALUE,
-                "WIN_DOCKER_BUILD_SSM_DOCUMENT": SSM_DOCUMENT_NAME,
-                "S3_FOR_WIN_DOCKER_IMG_BUILD": self.s3_bucket_name,
-            },
-            role=role,
-            timeout=Duration.minutes(timeout),
-        )
+        if self.stacks[0].account == PROD_ACCOUNT:
+            docker_build_step = CodeBuildStep(
+                "StartWait",
+                input=input,
+                commands=[
+                    "cd tests/ci/cdk/pipeline/scripts",
+                    # './copy_images.sh --repos "${ECR_REPOS} --platform windows"',
+                    "export NEED_REBUILD=1",
+                ],
+                env={
+                    **env,
+                    "ECR_REPOS": " ".join(self.ecr_repo_names),
+                },
+                role=role,
+            )
+        else:
+            timeout = (max_retry + 1) * 120
+            docker_build_step = CodeBuildStep(
+                "StartWait",
+                input=input,
+                commands=[
+                    "cd tests/ci/cdk/pipeline/scripts",
+                    './cleanup_orphaned_images.sh --repos "${ECR_REPOS}"',
+                    'trigger_conditions=$(./check_trigger_conditions.sh --build-type docker --platform windows --stacks "${STACKS}")',
+                    "export NEED_REBUILD=$(echo $trigger_conditions | sed -n -e 's/.*\(NEED_REBUILD=[0-9]*\).*/\\1/p' | cut -d'=' -f2 )",
+                    "./build_target.sh --build-type docker --platform windows --max-retry ${MAX_RETRY} --timeout ${TIMEOUT}",
+                ],
+                env={
+                    **env,
+                    "STACKS": " ".join(stack_names),
+                    "ECR_REPOS": " ".join(self.ecr_repo_names),
+                    "MAX_RETRY": str(max_retry),
+                    "TIMEOUT": str(timeout),
+                    "WIN_EC2_TAG_KEY": WIN_EC2_TAG_KEY,
+                    "WIN_EC2_TAG_VALUE": WIN_EC2_TAG_VALUE,
+                    "WIN_DOCKER_BUILD_SSM_DOCUMENT": SSM_DOCUMENT_NAME,
+                    "S3_FOR_WIN_DOCKER_IMG_BUILD": self.s3_bucket_name,
+                },
+                role=role,
+                timeout=Duration.minutes(timeout),
+            )
 
         wave.add_stage(self, post=[docker_build_step])
 
