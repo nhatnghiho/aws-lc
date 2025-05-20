@@ -133,7 +133,7 @@ class CiStage(Stage):
             input=input,
             commands=[
                 "cd tests/ci/cdk/pipeline/scripts",
-                "./build_target.sh --build-type ci --project ${PROJECT} --max-retry ${MAX_RETRY} --timeout ${TIMEOUT}",
+                # "./build_target.sh --build-type ci --project ${PROJECT} --max-retry ${MAX_RETRY} --timeout ${TIMEOUT}", #TODO: Revert this
             ],
             role=role,
             timeout=batch_timeout,
@@ -141,7 +141,8 @@ class CiStage(Stage):
             partial_batch_build_spec=batch_build_jobs,
             env={
                 **env,
-                "MAX_RETRY": max_retry,
+                # "MAX_RETRY": max_retry, #TODO: revert this
+                "MAX_RETRY": 0,
                 "NEED_REBUILD": prebuild_check_step.exported_variable("NEED_REBUILD"),
             },
         )

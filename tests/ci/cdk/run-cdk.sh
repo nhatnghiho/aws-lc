@@ -310,7 +310,7 @@ EOF
 function export_global_variables() {
   # If these variables are not set or empty, defaults are export.
   if [[ -z "${DEPLOY_ACCOUNT:+x}" ]]; then
-    export DEPLOY_ACCOUNT='620771051181'
+    export DEPLOY_ACCOUNT='183295444613' #TODO: revert this
   fi
   if [[ -z "${DEPLOY_REGION:+x}" ]]; then
     export DEPLOY_REGION='us-west-2'

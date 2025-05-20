@@ -29,7 +29,7 @@ class BuildSpecLoader(object):
             )
         # TODO(CryptoAlg-1276): remove below when the batch BuildSpec supports the env variable of account and region.
         placeholder_map = {
-            PROD_ACCOUNT: env.account,
+            "620771051181": env.account, #TODO: Revert this
             PROD_REGION: env.region,
         }
         with open(file_path) as original_file:
