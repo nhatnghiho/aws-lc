@@ -88,6 +88,8 @@ class SetupStack(Stack):
                     "ecr:BatchGetImage",
                     "ecr:PutImage",
                     "ecr:BatchDeleteImage",
+                    "ecr:GetAuthorizationToken",
+                    "ecr:ListImages"
                 ],
                 resources=["*"],
             )
