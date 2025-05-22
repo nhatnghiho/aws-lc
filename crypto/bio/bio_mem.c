@@ -256,7 +256,7 @@ static long mem_ctrl(BIO *bio, int cmd, long num, void *ptr) {
       if (b->data != NULL) {
         // For read only case reset to the start again
         if (bio->flags & BIO_FLAGS_MEM_RDONLY) {
-          b->data -= b->max - b->length;
+          b->data -= b->max - b->length - bbm->read_off;
           b->length = b->max;
         } else {
           OPENSSL_cleanse(b->data, b->max);
@@ -274,7 +274,7 @@ static long mem_ctrl(BIO *bio, int cmd, long num, void *ptr) {
       }
 
       if (bio->flags & BIO_FLAGS_MEM_RDONLY) {
-        b->data -= b->max - b->length;
+        b->data -= b->max - b->length - bbm->read_off;
         b->length = b->max - num;
       } else {
         if ((size_t)num > bbm->read_off + b->length) {
@@ -358,7 +358,7 @@ int BIO_mem_contents(const BIO *bio, const uint8_t **out_contents,
   mem_buf_sync((BIO *)bio);
 
   if (out_contents != NULL) {
-    *out_contents = (b->data != NULL) ? (uint8_t *)&b->data[bbm->read_off] : NULL;
+    *out_contents = (uint8_t *)b->data;
   }
   if(out_len) {
     *out_len = b->length;
