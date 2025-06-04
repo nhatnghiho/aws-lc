@@ -1,0 +1,12 @@
+diff --git a/smallapp/unbound-anchor.c b/smallapp/unbound-anchor.c
+index bd4a121f7..fe6e7db23 100644
+--- a/smallapp/unbound-anchor.c
++++ b/smallapp/unbound-anchor.c
+@@ -1195,6 +1195,7 @@ https(struct ip_list* ip_list, const char* pathname, const char* urlname,
+ 		if(verb) printf("fetched %s (%d bytes)\n",
+ 			pathname, (int)BIO_ctrl_pending(bio));
+ 	}
++        BIO_set_mem_eof_return(bio, 0);
+ 	return bio;
+ }
+ 
