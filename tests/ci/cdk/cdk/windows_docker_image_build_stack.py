@@ -100,8 +100,7 @@ class WindowsDockerImageBuildStack(Stack):
 
         # Define Windows EC2 instance, where the SSM document will be executed.
         machine_image = ec2.MachineImage.latest_windows(
-            # ec2.WindowsVersion.WINDOWS_SERVER_2022_ENGLISH_FULL_BASE
-            ec2.WindowsVersion.WINDOWS_SERVER_2019_ENGLISH_FULL_BASE
+            ec2.WindowsVersion.WINDOWS_SERVER_2022_ENGLISH_FULL_BASE
         )
         public_subnet = ec2.SubnetConfiguration(
             name="PublicWindowsDockerImageBuildSubnet", subnet_type=ec2.SubnetType.PUBLIC
@@ -113,8 +112,6 @@ class WindowsDockerImageBuildStack(Stack):
             scope=self,
             id="{}-vpc".format(id),
             nat_gateways=1,
-            # max_azs=1
-            # subnet_configuration=
         )
         block_device_volume = ec2.BlockDeviceVolume.ebs(
             volume_size=200, delete_on_termination=True

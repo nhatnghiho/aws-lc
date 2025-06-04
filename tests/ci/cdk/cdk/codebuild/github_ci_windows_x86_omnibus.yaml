@@ -22,9 +22,9 @@ batch:
     - identifier: windows_msvc2017_x64
       buildspec: ./tests/ci/codebuild/windows/run_windows_target.yml
       env:
-        type: WINDOWS_SERVER_2019_CONTAINER
+        type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
-        compute-type: BUILD_GENERAL1_LARGE
+        compute-type: BUILD_GENERAL1_2XLARGE
         image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:vs2017_latest
         variables:
           # vcvarsall will set the required lib and libpath for MSVC to compile everything
