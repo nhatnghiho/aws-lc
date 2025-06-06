@@ -188,7 +188,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "${REPOS:+x}" ]]; then
-  echo "No build type provided."
+  echo "No ECR repository provided"
   exit 1
 fi
 

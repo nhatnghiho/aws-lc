@@ -25,7 +25,7 @@ from util.metadata import (
     WIN_EC2_TAG_VALUE,
     SSM_DOCUMENT_NAME,
     GITHUB_SOURCE_VERSION,
-    S3_FOR_WIN_DOCKER_IMG_BUILD,
+    S3_FOR_WIN_DOCKER_IMG_BUILD, PROD_ACCOUNT,
 )
 from util.yml_loader import YmlLoader
 
@@ -55,7 +55,7 @@ class WindowsDockerImageBuildStack(Stack):
             "GITHUB_SOURCE_VERSION_PLACEHOLDER": GITHUB_SOURCE_VERSION,
         }
         content = YmlLoader.load(
-            "./cdk/ssm/windows_docker_build_ssm_document.yaml", placeholder_map
+            f"./cdk/ssm/{'windows_docker_copy_ssm_document' if env.account == PROD_ACCOUNT else 'windows_docker_build_ssm_document'}.yaml", placeholder_map
         )
 
         ssm.CfnDocument(
@@ -121,6 +121,7 @@ class WindowsDockerImageBuildStack(Stack):
             "choco install docker-cli -y",
             "choco install docker-engine -y",
             "choco install git --version 2.23.0 -y",
+            "choco install awscli -y",
             "Set-Service -Name docker -StartupType Automatic",
             "Restart-Computer -Force",
         )

@@ -160,11 +160,14 @@ if [[ ${BUILD_TYPE} == "docker" ]]; then
     exit 1
   fi
 
-#  if [[ ${PLATFORM} == "linux" ]]; then
-#    build_linux_docker_images
-#  elif [[ ${PLATFORM} == "windows" ]]; then
-#    build_win_docker_images
-#  fi
+# TODO: Revert this
+  if [[ ${DEPLOY_ACCOUNT} == '183295444613' ]]; then
+    if [[ ${PLATFORM} == "linux" ]]; then
+      build_linux_docker_images
+    elif [[ ${PLATFORM} == "windows" ]]; then
+      build_win_docker_images
+    fi
+  fi
   exit 0
 fi
 
