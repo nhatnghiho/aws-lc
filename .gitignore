@@ -43,4 +43,3 @@ symbols.txt
 .cache/
 /CMakePresets.json
 /compile_commands.json
-/scratch
