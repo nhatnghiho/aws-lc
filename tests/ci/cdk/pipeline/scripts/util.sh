@@ -135,7 +135,7 @@ function win_docker_img_build_status_check() {
   local status_check_max=$((timeout / 5))
   for i in $(seq 1 ${status_check_max}); do
     # https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ssm/list-commands.html
-    command_run_status=$(aws ssm list-commands --command-id "${WINDOWS_DOCKER_IMG_BUILD_COMMAND_ID}" | jq -r '.Commands[0].Status')
+    command_run_status=$(aws ssm list-commands --command-id "${WINDOWS_DOCKER_IMG_BUILD_COMMAND_ID}" | jq -r '.Commands[0].Status' 2>&1)
     if [[ ${command_run_status} == "Success" ]]; then
       echo "SSM command ${WINDOWS_DOCKER_IMG_BUILD_COMMAND_ID} finished successfully."
       return 0
