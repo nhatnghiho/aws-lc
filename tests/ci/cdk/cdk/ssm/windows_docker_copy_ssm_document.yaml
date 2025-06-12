@@ -12,6 +12,7 @@ mainSteps:
       runCommand:
         - $ErrorActionPreference = 'Stop'
         - $TRIGGER_TYPE = '{{ TriggerType }}'
+        - Write-Output "DEBUG - COPY IMAGES!!!"
         - "Get-ChildItem Env: | Sort-Object Name"
         - if (Test-Path "docker-images") { Remove-Item -Recurse -Force "docker-images" }
         - mkdir docker-images
