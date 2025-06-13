@@ -400,6 +400,7 @@ class SocketWaiter {
   // readiness may either be the socket being writable or stdin being readable,
   // depending on |stdin_wait|.
   bool Wait(StdinWait stdin_wait, bool *socket_ready, bool *stdin_ready) {
+    printf("DEBUG: In Wait\n");
     *socket_ready = true;
     *stdin_ready = false;
 
@@ -432,6 +433,7 @@ class SocketWaiter {
   // it returns false. This method may only be called after |Wait| returned
   // stdin was ready.
   bool ReadStdin(void *out, size_t *out_len, size_t max_out) {
+    printf("DEBUG: In ReadStdin\n");
     ssize_t n;
     do {
       n = read(STDIN_FILENO, out, max_out);

@@ -203,6 +203,7 @@ static bool HandleWWW(SSL *ssl) {
     return false;
   }
 
+  printf("DEBUG: Entering BIO_puts!!!");
   BIO_puts(bio.get(), "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n");
   PrintConnectionInfo(bio.get(), ssl);
 
@@ -422,8 +423,10 @@ bool Server(const std::vector<std::string> &args) {
     PrintConnectionInfo(bio_stderr.get(), ssl.get());
 
     if (args_map.count("-www") != 0) {
+      printf("DEBUG: Using HandleWWW\n");
       result = HandleWWW(ssl.get());
     } else {
+      printf("DEBUG: Using TransferData\n");
       result = TransferData(ssl.get(), sock);
     }
   } while (args_map.count("-loop") != 0);

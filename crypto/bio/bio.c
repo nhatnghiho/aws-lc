@@ -80,6 +80,8 @@
 static long callback_fn_wrap_ex(BIO *bio, int oper, const char *argp,
                               size_t len, int argi, long argl, int bio_ret,
                               size_t *processed) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   assert(bio != NULL);
   assert(bio->callback != NULL);
   assert(bio->callback_ex == NULL);
@@ -126,6 +128,8 @@ static long callback_fn_wrap_ex(BIO *bio, int oper, const char *argp,
 // Returns the |callback_ex| function if available, a wrapped legacy callback if only
 // |callback| is set, or NULL if no callbacks are set.
 static BIO_callback_fn_ex get_callback(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   assert(bio != NULL);
 
   if (bio->callback_ex != NULL) {
@@ -142,6 +146,8 @@ static BIO_callback_fn_ex get_callback(BIO *bio) {
 // |BIO_gets|, and |BIO_puts| operations.
 static int handle_callback_return(BIO *bio, int oper, const void *buf,
 int len, int ret) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
 
   size_t processed = 0;
 
@@ -183,6 +189,8 @@ static CRYPTO_EX_DATA_CLASS g_ex_data_class =
     CRYPTO_EX_DATA_CLASS_INIT_WITH_APP_DATA;
 
 BIO *BIO_new(const BIO_METHOD *method) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO *ret = OPENSSL_zalloc(sizeof(BIO));
   if (ret == NULL) {
     return NULL;
@@ -204,6 +212,8 @@ BIO *BIO_new(const BIO_METHOD *method) {
 }
 
 int BIO_free(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO *next_bio;
 
   for (; bio != NULL; bio = next_bio) {
@@ -235,19 +245,27 @@ int BIO_free(BIO *bio) {
 }
 
 int BIO_up_ref(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   CRYPTO_refcount_inc(&bio->references);
   return 1;
 }
 
 void BIO_vfree(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO_free(bio);
 }
 
 void BIO_free_all(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO_free(bio);
 }
 
 int BIO_read(BIO *bio, void *buf, int len) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
 
   if (bio == NULL || bio->method == NULL || bio->method->bread == NULL) {
     OPENSSL_PUT_ERROR(BIO, BIO_R_UNSUPPORTED_METHOD);
@@ -278,6 +296,8 @@ int BIO_read(BIO *bio, void *buf, int len) {
 }
 
 int BIO_read_ex(BIO *bio, void *data, size_t data_len, size_t *read_bytes) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   if (bio == NULL || read_bytes == NULL) {
     OPENSSL_PUT_ERROR(BIO, BIO_R_NULL_PARAMETER);
     return 0;
@@ -299,6 +319,8 @@ int BIO_read_ex(BIO *bio, void *data, size_t data_len, size_t *read_bytes) {
 }
 
 int BIO_gets(BIO *bio, char *buf, int len) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   if (bio == NULL || bio->method == NULL || bio->method->bgets == NULL) {
     OPENSSL_PUT_ERROR(BIO, BIO_R_UNSUPPORTED_METHOD);
     return -2;
@@ -328,6 +350,8 @@ int BIO_gets(BIO *bio, char *buf, int len) {
 }
 
 int BIO_write(BIO *bio, const void *in, int inl) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
 
   if (bio == NULL || bio->method == NULL || bio->method->bwrite == NULL) {
     OPENSSL_PUT_ERROR(BIO, BIO_R_UNSUPPORTED_METHOD);
@@ -358,6 +382,8 @@ int BIO_write(BIO *bio, const void *in, int inl) {
 }
 
 int BIO_write_ex(BIO *bio, const void *data, size_t data_len, size_t *written_bytes) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   if (bio == NULL) {
     OPENSSL_PUT_ERROR(BIO, BIO_R_NULL_PARAMETER);
     return 0;
@@ -383,6 +409,8 @@ int BIO_write_ex(BIO *bio, const void *data, size_t data_len, size_t *written_by
 }
 
 int BIO_write_all(BIO *bio, const void *data, size_t len) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   const uint8_t *data_u8 = data;
   while (len > 0) {
     const int write_len = ((len > INT_MAX) ? INT_MAX : (int)len);
@@ -399,6 +427,8 @@ int BIO_write_all(BIO *bio, const void *data, size_t len) {
 }
 
 int BIO_puts(BIO *bio, const char *in) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   // Check for bwrites here since we use that if bputs is NULL
   if (bio == NULL || bio->method == NULL || (bio->method->bwrite == NULL &&
                                             bio->method->bputs == NULL)) {
@@ -439,10 +469,14 @@ int BIO_puts(BIO *bio, const char *in) {
 }
 
 int BIO_flush(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return (int)BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, NULL);
 }
 
 long BIO_ctrl(BIO *bio, int cmd, long larg, void *parg) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   if (bio == NULL) {
     return 0;
   }
@@ -474,6 +508,8 @@ long BIO_ctrl(BIO *bio, int cmd, long larg, void *parg) {
 }
 
 char *BIO_ptr_ctrl(BIO *b, int cmd, long larg) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   char *p = NULL;
 
   if (BIO_ctrl(b, cmd, larg, (void *)&p) <= 0) {
@@ -484,81 +520,129 @@ char *BIO_ptr_ctrl(BIO *b, int cmd, long larg) {
 }
 
 long BIO_int_ctrl(BIO *b, int cmd, long larg, int iarg) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   int i = iarg;
 
   return BIO_ctrl(b, cmd, larg, (void *)&i);
 }
 
 int BIO_reset(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return (int)BIO_ctrl(bio, BIO_CTRL_RESET, 0, NULL);
 }
 
 int BIO_eof(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return (int)BIO_ctrl(bio, BIO_CTRL_EOF, 0, NULL);
 }
 
 void BIO_set_flags(BIO *bio, int flags) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->flags |= flags;
 }
 
 int BIO_test_flags(const BIO *bio, int flags) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return bio->flags & flags;
 }
 
 int BIO_should_read(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return BIO_test_flags(bio, BIO_FLAGS_READ);
 }
 
 int BIO_should_write(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return BIO_test_flags(bio, BIO_FLAGS_WRITE);
 }
 
 int BIO_should_retry(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return BIO_test_flags(bio, BIO_FLAGS_SHOULD_RETRY);
 }
 
 int BIO_should_io_special(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return BIO_test_flags(bio, BIO_FLAGS_IO_SPECIAL);
 }
 
-int BIO_get_retry_reason(const BIO *bio) { return bio->retry_reason; }
+int BIO_get_retry_reason(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  return bio->retry_reason;
+}
 
-void BIO_set_retry_reason(BIO *bio, int reason) { bio->retry_reason = reason; }
+void BIO_set_retry_reason(BIO *bio, int reason) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  bio->retry_reason = reason;
+}
 
 void BIO_clear_flags(BIO *bio, int flags) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->flags &= ~flags;
 }
 
 void BIO_set_retry_read(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->flags |= BIO_FLAGS_READ | BIO_FLAGS_SHOULD_RETRY;
 }
 
 void BIO_set_retry_write(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->flags |= BIO_FLAGS_WRITE | BIO_FLAGS_SHOULD_RETRY;
 }
 
 static const int kRetryFlags = BIO_FLAGS_RWS | BIO_FLAGS_SHOULD_RETRY;
 
 int BIO_get_retry_flags(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return bio->flags & kRetryFlags;
 }
 
 void BIO_clear_retry_flags(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->flags &= ~kRetryFlags;
   bio->retry_reason = 0;
 }
 
-int BIO_method_type(const BIO *bio) { return bio->method->type; }
+int BIO_method_type(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  return bio->method->type;
+}
 
-const char *BIO_method_name(const BIO *bio) { return bio->method->name; }
+const char *BIO_method_name(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  return bio->method->name;
+}
 
 void BIO_copy_next_retry(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO_clear_retry_flags(bio);
   BIO_set_flags(bio, BIO_get_retry_flags(bio->next_bio));
   bio->retry_reason = bio->next_bio->retry_reason;
 }
 
 long BIO_callback_ctrl(BIO *bio, int cmd, bio_info_cb fp) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   if (bio == NULL) {
     return 0;
   }
@@ -572,6 +656,8 @@ long BIO_callback_ctrl(BIO *bio, int cmd, bio_info_cb fp) {
 }
 
 size_t BIO_pending(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   const long r = BIO_ctrl((BIO *) bio, BIO_CTRL_PENDING, 0, NULL);
   assert(r >= 0);
 
@@ -582,10 +668,14 @@ size_t BIO_pending(const BIO *bio) {
 }
 
 size_t BIO_ctrl_pending(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return BIO_pending(bio);
 }
 
 size_t BIO_wpending(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   const long r = BIO_ctrl((BIO *) bio, BIO_CTRL_WPENDING, 0, NULL);
   assert(r >= 0);
 
@@ -596,22 +686,32 @@ size_t BIO_wpending(const BIO *bio) {
 }
 
 int BIO_set_close(BIO *bio, int close_flag) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return (int)BIO_ctrl(bio, BIO_CTRL_SET_CLOSE, close_flag, NULL);
 }
 
 int BIO_get_close(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return (int)BIO_ctrl(bio, BIO_CTRL_GET_CLOSE, 0, NULL);
 }
 
 OPENSSL_EXPORT uint64_t BIO_number_read(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return bio->num_read;
 }
 
 OPENSSL_EXPORT uint64_t BIO_number_written(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return bio->num_write;
 }
 
 BIO *BIO_push(BIO *bio, BIO *appended_bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO *last_bio;
 
   if (bio == NULL) {
@@ -628,6 +728,8 @@ BIO *BIO_push(BIO *bio, BIO *appended_bio) {
 }
 
 BIO *BIO_pop(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO *ret;
 
   if (bio == NULL) {
@@ -639,6 +741,8 @@ BIO *BIO_pop(BIO *bio) {
 }
 
 BIO *BIO_next(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   if (!bio) {
     return NULL;
   }
@@ -646,6 +750,8 @@ BIO *BIO_next(BIO *bio) {
 }
 
 BIO *BIO_find_type(BIO *bio, int type) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   int method_type, mask;
 
   if (!bio) {
@@ -672,6 +778,8 @@ BIO *BIO_find_type(BIO *bio, int type) {
 }
 
 int BIO_indent(BIO *bio, unsigned indent, unsigned max_indent) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   if (indent > max_indent) {
     indent = max_indent;
   }
@@ -685,10 +793,14 @@ int BIO_indent(BIO *bio, unsigned indent, unsigned max_indent) {
 }
 
 static int print_bio(const char *str, size_t len, void *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return BIO_write_all((BIO *)bio, str, len);
 }
 
 void ERR_print_errors(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   ERR_print_errors_cb(print_bio, bio);
 }
 
@@ -703,6 +815,8 @@ void ERR_print_errors(BIO *bio) {
 static int bio_read_all(BIO *bio, uint8_t **out, size_t *out_len,
                         const uint8_t *prefix, size_t prefix_len,
                         size_t max_len) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   static const size_t kChunkSize = 4096;
 
   size_t len = prefix_len + kChunkSize;
@@ -760,6 +874,8 @@ static int bio_read_all(BIO *bio, uint8_t **out, size_t *out_len,
 // on the first read. |out_eof_on_first_read| may be NULL to discard the value.
 static int bio_read_full(BIO *bio, uint8_t *out, int *out_eof_on_first_read,
                          size_t len) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   int first_read = 1;
   while (len > 0) {
     int todo = len <= INT_MAX ? (int)len : INT_MAX;
@@ -787,6 +903,8 @@ OPENSSL_DECLARE_ERROR_REASON(ASN1, ASN1_R_TOO_LONG)
 
 int BIO_read_asn1(BIO *bio, uint8_t **out, size_t *out_len, size_t max_len) {
   uint8_t header[6];
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
 
   static const size_t kInitialHeaderLen = 2;
   int eof_on_first_read;
@@ -885,15 +1003,23 @@ int BIO_read_asn1(BIO *bio, uint8_t **out, size_t *out_len, size_t max_len) {
 }
 
 void BIO_set_retry_special(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->flags |= BIO_FLAGS_READ | BIO_FLAGS_IO_SPECIAL;
 }
 
-int BIO_set_write_buffer_size(BIO *bio, int buffer_size) { return 0; }
+int BIO_set_write_buffer_size(BIO *bio, int buffer_size) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  return 0;
+}
 
 static struct CRYPTO_STATIC_MUTEX g_index_lock = CRYPTO_STATIC_MUTEX_INIT;
 static int g_index = BIO_TYPE_START;
 
 int BIO_get_new_index(void) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   CRYPTO_STATIC_MUTEX_lock_write(&g_index_lock);
   // If |g_index| exceeds 255, it will collide with the flags bits.
   int ret = g_index > 255 ? -1 : g_index++;
@@ -902,6 +1028,8 @@ int BIO_get_new_index(void) {
 }
 
 BIO_METHOD *BIO_meth_new(int type, const char *name) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   BIO_METHOD *method = OPENSSL_zalloc(sizeof(BIO_METHOD));
   if (method == NULL) {
     return NULL;
@@ -912,105 +1040,167 @@ BIO_METHOD *BIO_meth_new(int type, const char *name) {
 }
 
 void BIO_meth_free(BIO_METHOD *method) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   OPENSSL_free(method);
 }
 
 int BIO_meth_set_create(BIO_METHOD *method,
                         int (*create)(BIO *)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->create = create;
   return 1;
 }
 
 int (*BIO_meth_get_create(const BIO_METHOD *method)) (BIO *) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return method->create;
 }
 
 int BIO_meth_set_destroy(BIO_METHOD *method,
                          int (*destroy)(BIO *)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->destroy = destroy;
   return 1;
 }
 
 int (*BIO_meth_get_destroy(const BIO_METHOD *method)) (BIO *) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return method->destroy;
 }
 
 int BIO_meth_set_write(BIO_METHOD *method,
                        int (*write)(BIO *, const char *, int)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->bwrite = write;
   return 1;
 }
 
 int BIO_meth_set_read(BIO_METHOD *method,
                       int (*read)(BIO *, char *, int)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->bread = read;
   return 1;
 }
 
 int BIO_meth_set_gets(BIO_METHOD *method,
                       int (*gets)(BIO *, char *, int)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->bgets = gets;
   return 1;
 }
 
 int (*BIO_meth_get_gets(const BIO_METHOD *method)) (BIO *, char *, int) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return method->bgets;
 }
 
 int BIO_meth_set_ctrl(BIO_METHOD *method,
                       long (*ctrl)(BIO *, int, long, void *)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->ctrl = ctrl;
   return 1;
 }
 
 long (*BIO_meth_get_ctrl(const BIO_METHOD *method)) (BIO *, int, long, void *) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return method->ctrl;
 }
 
 int BIO_meth_set_callback_ctrl(BIO_METHOD *method,
                                long (*callback_ctrl)(BIO *, int, bio_info_cb)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->callback_ctrl = callback_ctrl;
   return 1;
 }
 
 long (*BIO_meth_get_callback_ctrl(const BIO_METHOD *method)) (BIO *, int, bio_info_cb) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return method->callback_ctrl;
 }
 
-void BIO_set_data(BIO *bio, void *ptr) { bio->ptr = ptr; }
+void BIO_set_data(BIO *bio, void *ptr) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  bio->ptr = ptr;
+}
 
-void *BIO_get_data(BIO *bio) { return bio->ptr; }
+void *BIO_get_data(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  return bio->ptr;
+}
 
-void BIO_set_init(BIO *bio, int init) { bio->init = init; }
+void BIO_set_init(BIO *bio, int init) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  bio->init = init;
+}
 
-int BIO_get_init(BIO *bio) { return bio->init; }
+int BIO_get_init(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  return bio->init;
+}
 
-void BIO_set_shutdown(BIO *bio, int shutdown) { bio->shutdown = shutdown; }
+void BIO_set_shutdown(BIO *bio, int shutdown) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  bio->shutdown = shutdown;
+}
 
-int BIO_get_shutdown(BIO *bio) { return bio->shutdown; }
+int BIO_get_shutdown(BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  return bio->shutdown;
+}
 
 int BIO_meth_set_puts(BIO_METHOD *method, int (*puts)(BIO *, const char *)) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   method->bputs = puts;
   return 1;
 }
 
 int (*BIO_meth_get_puts(const BIO_METHOD *method)) (BIO *, const char *) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return method->bputs;
 }
 
 void BIO_set_callback_ex(BIO *bio, BIO_callback_fn_ex callback) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->callback_ex = callback;
 }
 
 void BIO_set_callback(BIO *bio, BIO_callback_fn callback) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->callback = callback;
 }
 
 void BIO_set_callback_arg(BIO *bio, char *arg) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   bio->cb_arg = arg;
 }
 
 char *BIO_get_callback_arg(const BIO *bio) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return bio->cb_arg;
 }
 
@@ -1018,6 +1208,8 @@ int BIO_get_ex_new_index(long argl, void *argp,
                                     CRYPTO_EX_unused *unused,
                                     CRYPTO_EX_dup *dup_unused,
                                     CRYPTO_EX_free *free_func) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   int index;
   if (!CRYPTO_get_ex_new_index(&g_ex_data_class, &index, argl, argp,
                                free_func)) {
@@ -1027,9 +1219,13 @@ int BIO_get_ex_new_index(long argl, void *argp,
 }
 
 int BIO_set_ex_data(BIO *bio, int idx, void *data) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return CRYPTO_set_ex_data(&bio->ex_data, idx, data);
 }
 
 void *BIO_get_ex_data(const BIO *bio, int idx) {
+  printf("DEBUG: MAKING THINGS RUN LONGER");
+  printf("DEBUG: MAKING THINGS RUN LONGER");
   return CRYPTO_get_ex_data(&bio->ex_data, idx);
 }
