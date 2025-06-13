@@ -203,6 +203,7 @@ static bool HandleWWW(SSL *ssl) {
     return false;
   }
 
+  printf("DEBUG: Entering BIO_puts!!!");
   BIO_puts(bio.get(), "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n");
   PrintConnectionInfo(bio.get(), ssl);
 
