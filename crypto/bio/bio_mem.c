@@ -76,6 +76,8 @@ BIO *BIO_new_mem_buf(const void *buf, ossl_ssize_t len) {
   BUF_MEM *b;
   BIO_BUF_MEM *bbm;
 
+  printf("DEBUG: INSIDE MEM_BIO!!!");
+
   const size_t size = (len < 0 || (size_t)len > SIZE_MAX) ? strlen((char *)buf) : (size_t)len;
 
   if (!buf && len != 0) {
@@ -106,6 +108,7 @@ BIO *BIO_new_mem_buf(const void *buf, ossl_ssize_t len) {
 }
 
 static int mem_new(BIO *bio) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   BIO_BUF_MEM *bbm = OPENSSL_zalloc(sizeof(*bbm));
 
   if (bbm == NULL) {
@@ -130,6 +133,7 @@ static int mem_new(BIO *bio) {
 }
 
 static int mem_free(BIO *bio) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   if (!bio->shutdown || !bio->init || bio->ptr == NULL) {
     return 1;
   }
@@ -148,6 +152,7 @@ static int mem_free(BIO *bio) {
 }
 
 static void mem_buf_sync(BIO *bio) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   if (bio->init != 0 && bio->ptr != NULL) {
     BIO_BUF_MEM *bbm = (BIO_BUF_MEM *) bio->ptr;
     BUF_MEM *b = bbm->buf;
@@ -164,6 +169,7 @@ static void mem_buf_sync(BIO *bio) {
 }
 
 static int mem_read(BIO *bio, char *out, int outl) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   BIO_clear_retry_flags(bio);
   if (outl <= 0) {
     return 0;
@@ -191,6 +197,7 @@ static int mem_read(BIO *bio, char *out, int outl) {
 }
 
 static int mem_write(BIO *bio, const char *in, int inl) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   BIO_clear_retry_flags(bio);
   if (inl <= 0) {
     return 0;  // Successfully write zero bytes.
@@ -214,6 +221,7 @@ static int mem_write(BIO *bio, const char *in, int inl) {
 }
 
 static int mem_gets(BIO *bio, char *buf, int size) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   BIO_clear_retry_flags(bio);
   if (size <= 0) {
     return 0;
@@ -246,6 +254,7 @@ static int mem_gets(BIO *bio, char *buf, int size) {
 }
 
 static long mem_ctrl(BIO *bio, int cmd, long num, void *ptr) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   long ret = 1;
 
   BIO_BUF_MEM *bbm = (BIO_BUF_MEM *) bio->ptr;
@@ -342,10 +351,14 @@ static const BIO_METHOD mem_method = {
     mem_free,        NULL /* callback_ctrl */,
 };
 
-const BIO_METHOD *BIO_s_mem(void) { return &mem_method; }
+const BIO_METHOD *BIO_s_mem(void) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
+  return &mem_method;
+}
 
 int BIO_mem_contents(const BIO *bio, const uint8_t **out_contents,
                      size_t *out_len) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   if (!bio || bio->method != &mem_method) {
     return 0;
   }
@@ -365,17 +378,21 @@ int BIO_mem_contents(const BIO *bio, const uint8_t **out_contents,
 }
 
 int BIO_get_mem_ptr(BIO *bio, BUF_MEM **out) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   return (int)BIO_ctrl(bio, BIO_C_GET_BUF_MEM_PTR, 0, out);
 }
 
 int BIO_set_mem_buf(BIO *bio, BUF_MEM *b, int take_ownership) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   return (int)BIO_ctrl(bio, BIO_C_SET_BUF_MEM, take_ownership, b);
 }
 
 int BIO_set_mem_eof_return(BIO *bio, int eof_value) {
+  printf("DEBUG: INSIDE MEM_BIO!!!");
   return (int)BIO_ctrl(bio, BIO_C_SET_BUF_MEM_EOF_RETURN, eof_value, NULL);
 }
 
 const BIO_METHOD *BIO_s_secmem(void) {
-    return BIO_s_mem();
+  printf("DEBUG: INSIDE MEM_BIO!!!");
+  return BIO_s_mem();
 }
