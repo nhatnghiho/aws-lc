@@ -78,7 +78,13 @@ rmdir /s /q %BUILD_DIR%
 mkdir %BUILD_DIR%
 cd %BUILD_DIR%
 
-cmake -GNinja -DCMAKE_BUILD_TYPE=%~1 %~2 %SRC_ROOT% || goto error
+@REM if /i "%RUN_SDE%" == "true " (
+@REM    @echo LOG: Disabling AVX via compiler flags for SDE tests
+@REM    cmake -GNinja -DCMAKE_BUILD_TYPE=%~1 -DCMAKE_C_FLAGS="/arch:SSE2 /d2Qvec-" -DCMAKE_CXX_FLAGS="/arch:SSE2 /d2Qvec-" -DCMAKE_ASM_NASM_FLAGS="-DBORINGSSL_DISPATCH_TEST -DMY_ASSEMBLER_IS_TOO_OLD_FOR_AVX -DMY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX" %~2 %SRC_ROOT% || goto error
+@REM ) else (
+@REM    cmake -GNinja -DCMAKE_BUILD_TYPE=%~1 %~2 %SRC_ROOT% || goto error
+@REM )
+cmake -GNinja -DMY_ASSEMBLER_IS_TOO_OLD_FOR_AVX=ON -DMY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX=ON -DCMAKE_BUILD_TYPE=%~1 %~2 %SRC_ROOT% || goto error
 
 @echo  LOG: %date%-%time% %1 %2 cmake generation complete, starting build
 ninja || goto error
