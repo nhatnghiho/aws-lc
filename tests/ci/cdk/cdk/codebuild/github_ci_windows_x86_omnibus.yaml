@@ -34,10 +34,10 @@ batch:
     - identifier: windows_msvc2015_sde_x64
       buildspec: ./tests/ci/codebuild/windows/run_windows_target.yml
       env:
-#        type: WINDOWS_SERVER_2022_CONTAINER
+        type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
-#        compute-type: BUILD_GENERAL1_2XLARGE
-        fleet: aws-lc_windows-2019_64-core
+        compute-type: BUILD_GENERAL1_2XLARGE
+#        fleet: aws-lc_windows-2019_64-core
         image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:vs2015_latest
         variables:
 #         MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
