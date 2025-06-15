@@ -879,6 +879,10 @@ if(ARCH STREQUAL "x86" AND NOT OPENSSL_NO_SSE2_FOR_TESTING)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
     set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -msse2")
   endif()
+
+  if (MSVC)
+    set(C_CXX_FLAGS "${C_CXX_FLAGS} /arch:x64")
+  endif()
 endif()
 
 if(ENABLE_DATA_INDEPENDENT_TIMING)
