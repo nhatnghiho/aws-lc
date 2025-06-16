@@ -37,7 +37,7 @@ batch:
       env:
 #        type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
-        fleet: aws-lc_windows-2019_64-core
+        fleet: aws_lc_windows_2019_64_core_cdk
 #        compute-type: BUILD_GENERAL1_2XLARGE
         image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:vs2017_latest
         variables:

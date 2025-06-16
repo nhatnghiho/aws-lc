@@ -70,7 +70,7 @@ class AwsLcGitHubCIStack(AwsLcBaseCiStack):
             "code_build_batch_policy": code_build_batch_policy,
             "metrics_policy": metrics_policy,
         }
-        role = iam.Role(
+        self.role = iam.Role(
             scope=self,
             id="{}-role".format(id),
             assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
@@ -87,7 +87,7 @@ class AwsLcGitHubCIStack(AwsLcBaseCiStack):
             id=id,
             project_name=id,
             source=self.git_hub_source,
-            role=role,
+            role=self.role,
             timeout=Duration.minutes(self.timeout),
             logging=logging_options,
             environment=codebuild.BuildEnvironment(

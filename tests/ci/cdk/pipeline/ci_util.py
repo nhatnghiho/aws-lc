@@ -8,6 +8,7 @@ from cdk.aws_lc_android_ci_stack import AwsLcAndroidCIStack
 from cdk.aws_lc_ec2_test_framework_ci_stack import AwsLcEC2TestingCIStack
 from cdk.aws_lc_github_ci_stack import AwsLcGitHubCIStack
 from cdk.aws_lc_github_fuzz_ci_stack import AwsLcGitHubFuzzCIStack
+from cdk.aws_lc_github_windows_ci_stack import AwsLcGitHubWindowsCIStack
 
 
 # Define CodeBuild Batch jobs for testing code.
@@ -89,7 +90,7 @@ def add_ci_stacks(
     )
 
     win_x86_build_spec_file = "cdk/codebuild/github_ci_windows_x86_omnibus.yaml"
-    AwsLcGitHubCIStack(
+    AwsLcGitHubWindowsCIStack(
         scope,
         "aws-lc-ci-windows-x86",
         win_x86_build_spec_file,
