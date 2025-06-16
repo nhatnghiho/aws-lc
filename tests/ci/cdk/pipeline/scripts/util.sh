@@ -99,8 +99,12 @@ function start_windows_img_build() {
   # Run commands on windows EC2 instance to build windows docker images.
   for i in {1..60}; do
     instance_id=$(aws ec2 describe-instances \
-      --filters "Name=tag:${WIN_EC2_TAG_KEY},Values=${WIN_EC2_TAG_VALUE}" | jq -r '.Reservations[0].Instances[0].InstanceId')
-    if [[ "${instance_id}" == "null" ]]; then
+      --filters "Name=tag:${WIN_EC2_TAG_KEY},Values=${WIN_EC2_TAG_VALUE}" \
+      --query 'Reservations[0].Instances[0].InstanceId' \
+      --output text 2>&1)
+    if echo "${instance_id}" | grep -q "RequestExpired"; then
+      refresh_session
+    elif [[ "${instance_id}" == "null" ]]; then
       sleep 60
       continue
     fi
