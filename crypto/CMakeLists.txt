@@ -115,7 +115,7 @@ if(NOT OPENSSL_NO_ASM)
       if("${CMAKE_BUILD_TYPE_LOWER}" STREQUAL "relwithdebinfo" OR
               "${CMAKE_BUILD_TYPE_LOWER}" STREQUAL "debug")
         # Provide debug in the default format
-        set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -g")
+        set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS}")
       endif()
 
       # On Windows, we use the NASM output.
