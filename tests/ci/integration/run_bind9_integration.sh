@@ -28,19 +28,31 @@ AWS_LC_BUILD_FOLDER="${SCRATCH_FOLDER}/aws-lc-build"
 AWS_LC_INSTALL_FOLDER="${SCRATCH_FOLDER}/aws-lc-install"
 
 function bind9_build() {
-  autoreconf -fi  
-  PKG_CONFIG_PATH="${AWS_LC_INSTALL_FOLDER}/lib/pkgconfig" ./configure \
-      --with-openssl="${AWS_LC_INSTALL_FOLDER}" \
-      --enable-dnstap \
-      --enable-dnsrps \
-      --with-cmocka \
-      --with-libxml2 \
-      --enable-leak-detection
-  make -j ${NUM_CPU_THREADS} -k all
+#  OPENSSL_CFLAGS="-I${AWS_LC_INSTALL_FOLDER}/include"
+#  OPENSSL_LIBS="-L${AWS_LC_INSTALL_FOLDER}/lib -lssl -lcrypto"
+#
+#  export LDFLAGS="$OPENSSL_LIBS -Wl,-rpath,${AWS_LC_INSTALL_FOLDER}/lib"
+#  export CFLAGS="$OPENSSL_CFLAGS"
+
+  #dnsrps was removed since bind9 9.21.2
+  meson setup "$BIND9_BUILD_FOLDER" \
+    --pkg-config-path="${AWS_LC_INSTALL_FOLDER}/lib/pkgconfig" \
+    --libdir=lib \
+    -Ddnstap=enabled \
+    -Dcmocka=enabled \
+    -Dstats-xml=enabled \
+    -Dleak-detection=enabled \
+    -Dtracing=disabled
+
+  meson compile -C "$BIND9_BUILD_FOLDER"
+  "$BIND9_BUILD_FOLDER"/named -V
+
+  ninja -C "$BIND9_BUILD_FOLDER" -j "$NUM_CPU_THREADS" all
 }
 
 function bind9_run_tests() {
-  make -j ${NUM_CPU_THREADS} check
+  # use ninja over meson test for better logging
+  ninja -C "$BIND9_BUILD_FOLDER" -j "$NUM_CPU_THREADS" test
 }
 
 mkdir -p ${SCRATCH_FOLDER}
@@ -53,6 +65,7 @@ ls
 
 aws_lc_build ${SRC_ROOT} ${AWS_LC_BUILD_FOLDER} ${AWS_LC_INSTALL_FOLDER} -DBUILD_TESTING=OFF -DBUILD_TOOL=OFF -DBUILD_SHARED_LIBS=1
 export LD_LIBRARY_PATH="${AWS_LC_INSTALL_FOLDER}/lib"
+export LD_PRELOAD=libjemalloc.so.2
 
 # Build bind9 from source.
 pushd ${BIND9_SRC_FOLDER}
@@ -62,8 +75,8 @@ bind9_run_tests
 
 # Iterate through all of bind's vended artifacts.
 for libname in dns ns isc isccc isccfg; do
-  ldd "${BIND9_SRC_FOLDER}/lib/${libname}/.libs/lib${libname}.so" | grep "${AWS_LC_INSTALL_FOLDER}/lib/libcrypto.so" || exit 1
-  ldd "${BIND9_SRC_FOLDER}/lib/${libname}/.libs/lib${libname}.so" | grep "${AWS_LC_INSTALL_FOLDER}/lib/libssl.so" || exit 1
+  ldd "${BIND9_BUILD_FOLDER}/lib${libname}.so" | grep "${AWS_LC_INSTALL_FOLDER}/lib/libcrypto.so" || exit 1
+  ldd "${BIND9_BUILD_FOLDER}/lib${libname}.so" | grep "${AWS_LC_INSTALL_FOLDER}/lib/libssl.so" || exit 1
 done
 
 popd
