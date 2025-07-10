@@ -25,7 +25,7 @@ batch:
         type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2017-sde_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2017_latest
         variables:
           # vcvarsall will set the required lib and libpath for MSVC to compile everything
           MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
@@ -36,9 +36,8 @@ batch:
       env:
         type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
-        # fleet: aws_lc_windows_2019_64_core_cdk
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2022-sde_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2022_latest
         variables:
           MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
           ARCH_OPTION: x64
