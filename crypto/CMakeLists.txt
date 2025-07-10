@@ -362,6 +362,7 @@ add_library(
   asn1/posix_time.c
   base64/base64.c
   bio/bio.c
+  bio/bio_addr.c
   bio/bio_mem.c
   bio/connect.c
   bio/dgram.c
@@ -369,6 +370,7 @@ add_library(
   bio/fd.c
   bio/file.c
   bio/hexdump.c
+  bio/md.c
   bio/pair.c
   bio/printf.c
   bio/socket.c
@@ -397,6 +399,7 @@ add_library(
   cipher_extra/e_tls.c
   cipher_extra/tls_cbc.c
   conf/conf.c
+  console/console.c
   crypto.c
   des/des.c
   dh_extra/params.c
@@ -458,7 +461,6 @@ add_library(
   pem/pem_x509.c
   pem/pem_xaux.c
   pkcs7/bio/cipher.c
-  pkcs7/bio/md.c
   pkcs7/pkcs7.c
   pkcs7/pkcs7_asn1.c
   pkcs7/pkcs7_x509.c
@@ -749,6 +751,7 @@ if(BUILD_TESTING)
     abi_self_test.cc
     asn1/asn1_test.cc
     base64/base64_test.cc
+    bio/bio_md_test.cc
     bio/bio_test.cc
     bio/bio_socket_test.cc
     blake2/blake2_test.cc
@@ -759,6 +762,7 @@ if(BUILD_TESTING)
     cipher_extra/cipher_test.cc
     compiler_test.cc
     conf/conf_test.cc
+    console/console_test.cc
     constant_time_test.cc
     crypto_test.cc
     ecdh_extra/ecdh_test.cc
@@ -785,6 +789,7 @@ if(BUILD_TESTING)
     fipsmodule/evp/evp_ctx_test.cc
     fipsmodule/kdf/kdf_test.cc
     fipsmodule/md5/md5_test.cc
+    fipsmodule/ml_kem/ml_kem_test.cc
     fipsmodule/modes/gcm_test.cc
     fipsmodule/modes/xts_test.cc
     fipsmodule/pbkdf/pbkdf_test.cc
@@ -808,7 +813,6 @@ if(BUILD_TESTING)
     ocsp/ocsp_test.cc
     pem/pem_test.cc
     pkcs7/bio/bio_cipher_test.cc
-    pkcs7/bio/bio_md_test.cc
     pkcs7/pkcs7_test.cc
     pkcs8/pkcs8_test.cc
     pkcs8/pkcs12_test.cc
@@ -843,6 +847,7 @@ if(BUILD_TESTING)
   add_dependencies(${CRYPTO_TEST_EXEC} boringssl_prefix_symbols)
   target_link_libraries(${CRYPTO_TEST_EXEC} boringssl_gtest_main)
   target_include_directories(${CRYPTO_TEST_EXEC} BEFORE PRIVATE ${AWSLC_BINARY_DIR}/symbol_prefix_include)
+  target_compile_definitions(${CRYPTO_TEST_EXEC} PRIVATE AWS_LC_TEST_ENV)
   if(MSVC)
     target_link_libraries(${CRYPTO_TEST_EXEC} ws2_32)
   else()
