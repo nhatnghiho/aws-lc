@@ -101,7 +101,7 @@ var cpusWithoutAVX = []string{
 
 var sdeCPUs []string
 
-func initSDECPUs() {
+func generateCPUList() {
     sdeCPUs = append([]string{}, defaultCPUs...)
 	if (runtime.GOOS == "windows") {
 	    cmd := exec.Command("cmd", "/C", "ver")
@@ -386,8 +386,8 @@ func main() {
 	flag.Parse()
 	setWorkingDirectory()
 	
-	// Initialize sdeCPUs now that flags are parsed
-	initSDECPUs()
+	// Initialize the list of CPUs to test
+	generateCPUList()
 
 	testCases, err := testconfig.ParseTestConfig("util/all_tests.json")
 	if err != nil {
