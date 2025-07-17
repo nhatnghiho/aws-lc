@@ -3035,6 +3035,44 @@ void SSL_set_msg_callback_arg(SSL *ssl, void *arg) {
   ssl->msg_callback_arg = arg;
 }
 
+void SSL_CTX_set_client_hello_cb(SSL_CTX *c, SSL_client_hello_cb_fn cb,
+                                 void *arg) {
+  c->client_hello_cb = cb;
+  c->client_hello_cb_arg = arg;
+}
+
+int SSL_client_hello_isv2(SSL *s) {
+  // SSLv2 not supported
+  return 0;
+}
+
+int SSL_client_hello_get0_ext(SSL *s, unsigned int type, const unsigned char **out,
+                              size_t *outlen) {
+  GUARD_PTR(s);
+  GUARD_PTR(s->s3);
+  SSL_HANDSHAKE* hs = s->s3->hs.get();
+  GUARD_PTR(hs);
+
+  SSLMessage msg_unused;
+  SSL_CLIENT_HELLO client_hello;
+  if (!hs->GetClientHello(&msg_unused, &client_hello)) {
+    return 0;
+  }
+
+  CBS cbs;
+  if (!ssl_client_hello_get_extension(&client_hello, &cbs, static_cast<uint16_t>(type))) {
+    return 0;  // Extension not found
+  }
+
+  if (out != nullptr) {
+    *out = CBS_data(&cbs);
+  }
+  if (outlen != nullptr) {
+    *outlen = CBS_len(&cbs);
+  }
+  return 1;  // Success
+}
+
 void SSL_CTX_set_keylog_callback(SSL_CTX *ctx,
                                  void (*cb)(const SSL *ssl, const char *line)) {
   ctx->keylog_callback = cb;
@@ -3597,5 +3635,10 @@ OPENSSL_EXPORT int SSL_get_write_traffic_secret(
   *out_len = ssl->s3->write_traffic_secret_len;
 
   return 1;
+}
+
+// No-op function for compatibility with OpenSSL.
+int SSL_verify_client_post_handshake(SSL *ssl) {
+  return 0;
 }
 

@@ -37,7 +37,6 @@ RUN `
     && del temp.tar
 
 # Add MSBuild and Windows SDK tools to PATH
-#RUN setx /M PATH "%PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\17.0\Bin;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64"
 RUN setx /M PATH "%PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\17.0\Bin"
 
 RUN setx /M SDEROOT C:/windows-sde

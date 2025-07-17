@@ -27,10 +27,4 @@ RUN `
 # Add msbuild and cl to PATH
 RUN setx /M PATH "%PATH%;C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin"
 
-# Replace Windows SDK with the correct binary path. vcvarsall.bat for MSVC2015 does not account for the nested directory.
-RUN #rmdir /s /Q "C:\Program Files (x86)\Windows Kits\10\bin\x64" && `
-#    rmdir /s /Q "C:\Program Files (x86)\Windows Kits\10\bin\x86" && `
-#    move "C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x64" "C:\Program Files (x86)\Windows Kits\10\bin" && `
-#    move "C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86" "C:\Program Files (x86)\Windows Kits\10\bin"
-
 CMD [ "cmd.exe" ]
