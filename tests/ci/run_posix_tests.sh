@@ -43,7 +43,7 @@ build_options_to_test=("" "-DBUILD_SHARED_LIBS=1" "-DCMAKE_BUILD_TYPE=Release" "
 
 ## Build option: MY_ASSEMBLER_IS_TOO_OLD_FOR_AVX
 for build_option in "${build_options_to_test[@]}"; do
-  run_build ${build_option} -DMY_ASSEMBLER_IS_TOO_OLD_FOR_AVX=ON
+  run_build ${build_option}
 done
 
 ## Build option: MY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX
