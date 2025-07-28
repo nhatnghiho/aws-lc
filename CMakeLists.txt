@@ -881,6 +881,12 @@ if(ARCH STREQUAL "x86" AND NOT OPENSSL_NO_SSE2_FOR_TESTING)
   endif()
 endif()
 
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /d2Qvec-mathlib- /d2SSAOptimizer- /d2Qvec-sse2only")
+endif()
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo "DEBUG!!!!!!${CMAKE_CXX_FLAGS}")
+
 if(ENABLE_DATA_INDEPENDENT_TIMING)
   add_definitions(-DENABLE_AUTO_SET_RESET_DIT)
 endif()
