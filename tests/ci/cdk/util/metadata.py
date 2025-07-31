@@ -6,7 +6,7 @@
 from util.env_util import EnvUtil
 
 # Used when AWS CDK defines AWS resources.
-PROD_ACCOUNT = "620771051181"
+PROD_ACCOUNT = "183295444613"
 PROD_REGION = "us-west-2"
 PRE_PROD_ACCOUNT = "351119683581"
 PRE_PROD_REGION = "us-west-2"

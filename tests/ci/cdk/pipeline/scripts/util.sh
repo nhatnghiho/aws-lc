@@ -12,13 +12,15 @@ fi
 
 function assume_role() {
   set +x
-  if [[ -z ${CROSS_ACCOUNT_BUILD_ROLE_ARN} ]]; then
+  local role_arn=${1:-${CROSS_ACCOUNT_BUILD_ROLE_ARN}}
+
+  if [[ -z ${role_arn} ]]; then
     echo "No role arn provided"
     return 1
   fi
 
   local session_name=${CROSS_ACCOUNT_BUILD_SESSION:-"build-session"}
-  CREDENTIALS=$(aws sts assume-role --role-arn "${CROSS_ACCOUNT_BUILD_ROLE_ARN}" --role-session-name "${session_name}")
+  CREDENTIALS=$(aws sts assume-role --role-arn "${role_arn}" --role-session-name "${session_name}")
   export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId)
   export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey)
   export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken)
@@ -80,7 +82,6 @@ function codebuild_build_status_check() {
     elif [[ ${build_batch_status} == "IN_PROGRESS" ]]; then
       echo "${i}: Wait 5 min for build job finish."
       sleep 300
-    # if the build runs for too long, AWS sessions may expire and need to be refreshed
     elif echo "${build_batch_status}" | grep -q "ExpiredTokenException"; then
       refresh_session
     else
