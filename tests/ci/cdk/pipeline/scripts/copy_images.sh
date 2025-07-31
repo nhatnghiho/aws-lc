@@ -6,7 +6,7 @@ set -exuo pipefail
 
 source util.sh
 
-PROD_ACCOUNT="620771051181"
+PROD_ACCOUNT="183295444613"
 PRE_PROD_ACCOUNT="351119683581"
 AWS_REGION="us-west-2"
 
