@@ -114,7 +114,7 @@ func initSDECPUs() {
 
         // Windows Server 2022 and newer may natively use some AVX instructions that old CPUs do not support
         if isWindowsOlderThan2022(verOutput) {
-            sdeCPUs = append(sdeCPUs, cpusWithoutAVX...)
+            sdeCPUs = append(sdeCPUs, cpusWithoutAVXSupport...)
         } else {
             fmt.Printf("Running on Windows 2022 or newer. Removed old CPUs lacking AVX support that Windows 2022+ may use.\n")
         }

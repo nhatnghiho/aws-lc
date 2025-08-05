@@ -14,7 +14,7 @@ batch:
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
         # Build failure on Docker image `vs2015_latest`, tracked in CryptoAlg-741.
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2015_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2015_latest
         variables:
           MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat'
           ARCH_OPTION: x64
@@ -25,7 +25,7 @@ batch:
         type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2017_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2017_latest
         variables:
           # vcvarsall will set the required lib and libpath for MSVC to compile everything
           MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
@@ -37,7 +37,7 @@ batch:
         type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2019_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2019_latest
         variables:
           MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
           ARCH_OPTION: x64
@@ -48,7 +48,7 @@ batch:
         type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_LARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2022_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2022_latest
         variables:
           MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
           ARCH_OPTION: x64
@@ -59,7 +59,7 @@ batch:
         type: WINDOWS_SERVER_2022_CONTAINER
         privileged-mode: false
         compute-type: BUILD_GENERAL1_2XLARGE
-        image: 620771051181.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2022_latest
+        image: 183295444613.dkr.ecr.us-west-2.amazonaws.com/aws-lc-docker-images-windows-x86:windows-2022_vs2022_latest
         variables:
           MSVC_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
           ARCH_OPTION: x64
