@@ -42,7 +42,7 @@ function build_codebuild_ci_project() {
         retry_batch_build
       fi
 
-      echo "Waiting for docker images creation. Building the docker images need to take 1 hour."
+      echo "Waiting for CI tests to complete. It may take up to 1 hour"
       # TODO(CryptoAlg-624): These image build may fail due to the Docker Hub pull limits made on 2020-11-01.
       if codebuild_build_status_check "${TIMEOUT}"; then
         echo "All tests completed successfully"
