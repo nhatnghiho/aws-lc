@@ -7,6 +7,9 @@ import time
 import datetime
 import time
 import json
+
+from botocore.exceptions import ClientError
+
 from cdk.util.devicefarm_util import AWS_REGION, ANDROID_TEST_NAME, ANDROID_APK, ANDROID_TEST_APK, DEVICEFARM_PROJECT, DEVICEFARM_DEVICE_POOL
 from arnparse import arnparse
 
@@ -20,7 +23,41 @@ config = {
     "poolArn": DEVICEFARM_DEVICE_POOL,
 }
 
-client = boto3.client('devicefarm', region_name=AWS_REGION)
+def assume_role(role_arn, session_name, duration_seconds=3600):
+    """
+    Assume an IAM role and return credentials
+
+    Args:
+        role_arn: ARN of the role to assume (e.g., 'arn:aws:iam::123456789012:role/MyRole')
+        session_name: Name for the assumed role session
+        duration_seconds: Session duration (900-43200 seconds, default 1 hour)
+
+    Returns:
+        dict: Temporary credentials
+    """
+    try:
+        sts_client = boto3.client('sts')
+
+        response = sts_client.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName=session_name,
+            DurationSeconds=duration_seconds
+        )
+
+        return response['Credentials']
+
+    except ClientError as e:
+        print(f"Error assuming role: {e}")
+        raise
+
+
+credentials = assume_role("arn:aws:iam::351119683581:role/aws-lc-ci-devicefarm-andr-awslccidevicefarmandroidr-BUnvxrEGJOxc", "test_session")
+client = boto3.client(
+    'devicefarm',
+    region_name=AWS_REGION,
+    aws_access_key_id=credentials['AccessKeyId'],
+    aws_secret_access_key=credentials['SecretAccessKey'],
+    aws_session_token=credentials['SessionToken'])
 
 unique = config['namePrefix']
 aws_region = config['awsRegion']
