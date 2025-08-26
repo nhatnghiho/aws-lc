@@ -8,7 +8,7 @@ from constructs import Construct
 
 from cdk.ecr_stack import EcrStack
 from cdk.linux_docker_image_batch_build_stack import LinuxDockerImageBatchBuildStack
-from util.metadata import LINUX_X86_ECR_REPO, LINUX_AARCH_ECR_REPO, PROD_ACCOUNT
+from util.metadata import LINUX_X86_ECR_REPO, LINUX_AARCH_ECR_REPO, PROD_ACCOUNT, GITHUB_REPO_OWNER, GITHUB_REPO_NAME
 
 
 class LinuxDockerImageBuildStage(Stage):
@@ -108,6 +108,8 @@ class LinuxDockerImageBuildStage(Stage):
                     "ECR_REPOS": " ".join(self.ecr_repo_names),
                     "MAX_RETRY": str(max_retry),
                     "TIMEOUT": str(timeout),
+                    "GITHUB_REPO_OWNER": GITHUB_REPO_OWNER,
+                    "GITHUB_REPO_NAME": GITHUB_REPO_NAME
                 },
                 role=role,
                 timeout=Duration.minutes(timeout),
