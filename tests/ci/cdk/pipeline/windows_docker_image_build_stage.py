@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR ISC
 import typing
 
-from aws_cdk import Stage, Environment, Stack, Duration, aws_iam as iam, pipelines
+from aws_cdk import Stage, Environment, Stack, Duration, aws_iam as iam, pipelines, aws_codebuild as codebuild
 from aws_cdk.pipelines import CodeBuildStep
 from constructs import Construct
 
@@ -14,7 +14,7 @@ from util.metadata import (
     WIN_EC2_TAG_VALUE,
     SSM_DOCUMENT_NAME,
     GITHUB_REPO_OWNER,
-    GITHUB_REPO_NAME,
+    GITHUB_REPO_NAME, GITHUB_TOKEN_SECRET_NAME,
 )
 
 
@@ -77,6 +77,14 @@ class WindowsDockerImageBuildStage(Stage):
         docker_build_step = CodeBuildStep(
             "StartWait",
             input=input,
+            build_environment=codebuild.BuildEnvironment(
+                environment_variables={
+                    "GITHUB_PAT": codebuild.BuildEnvironmentVariable(
+                        type=codebuild.BuildEnvironmentVariableType.SECRETS_MANAGER,
+                        value=GITHUB_TOKEN_SECRET_NAME,
+                    ),
+                }
+            ),
             commands=[
                 "cd tests/ci/cdk/pipeline/scripts",
                 './cleanup_orphaned_images.sh --repos "${ECR_REPOS}"',
