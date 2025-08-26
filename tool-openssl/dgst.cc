@@ -141,11 +141,12 @@ static bool GenerateHash(const std::string &in_path, const EVP_MD *digest,
 
   uint8_t buf[4096];
   for (;;) {
-    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
-
     if (feof(in_file.get())) {
       break;
     }
+
+    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
+
     if (ferror(in_file.get())) {
       fprintf(stderr, "Error reading from '%s'.\n", in_path.c_str());
       return false;
@@ -192,11 +193,12 @@ static bool GenerateHMAC(const std::string &in_path, const char *hmac_key,
 
   uint8_t buf[4096];
   for (;;) {
-    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
-
     if (feof(in_file.get())) {
       break;
     }
+
+    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
+
     if (ferror(in_file.get())) {
       fprintf(stderr, "Error reading from '%s'.\n", in_path.c_str());
       return false;
@@ -254,11 +256,12 @@ static bool GenerateSignature(EVP_PKEY *pkey, const std::string &in_path,
 
   uint8_t buf[4096];
   for (;;) {
-    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
-
     if (feof(in_file.get())) {
       break;
     }
+
+    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
+
     if (ferror(in_file.get())) {
       fprintf(stderr, "Error reading from '%s'.\n", in_path.c_str());
       return false;
@@ -317,11 +320,12 @@ static bool VerifySignature(EVP_PKEY *pkey, const std::string &in_path,
 
   uint8_t buf[4096];
   for (;;) {
-    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
-
     if (feof(in_file.get())) {
       break;
     }
+
+    size_t n = fread(buf, 1, sizeof(buf), in_file.get());
+
     if (ferror(in_file.get())) {
       fprintf(stderr, "Error reading from '%s'.\n", in_path.c_str());
       return false;
