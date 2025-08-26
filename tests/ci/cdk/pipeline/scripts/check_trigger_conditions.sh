@@ -37,7 +37,7 @@ function get_commit_changed_files() {
     file_paths=("${WINDOWS_DOCKER_PATH}" "${PIPELINE_PATH}")
   fi
 
-  changed_files=$(git diff-tree --no-commit-id --name-only -r "${COMMIT_HASH}")
+  changed_files=$(curl -s "https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/commits/${COMMIT_HASH}" | jq -r '.files[].filename')
 
   for file_path in "${file_paths[@]}"; do
     if (echo "$changed_files" | grep -E "^${file_path}"); then

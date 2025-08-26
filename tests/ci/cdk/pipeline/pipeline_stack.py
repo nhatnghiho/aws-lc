@@ -6,12 +6,12 @@ from enum import Enum
 from aws_cdk import Stack, Environment, Duration
 from aws_cdk import (
     pipelines,
-    aws_codestarconnections as codestarconnections,
     aws_codepipeline as codepipeline,
     aws_iam as iam,
     aws_events as events,
     aws_events_targets as targets,
     aws_codebuild as codebuild,
+    aws_secretsmanager as secretsmanager,
 )
 from aws_cdk.pipelines import CodeBuildStep, ManualApprovalStep
 from constructs import Construct
@@ -42,13 +42,6 @@ class AwsLcCiPipeline(Stack):
             **kwargs,
         )
 
-        gh_connection = codestarconnections.CfnConnection(
-            self,
-            "GitHubConnection",
-            connection_name="AwsLcCiPipelineGitHubConnection",
-            provider_type="GitHub",
-        )
-
         cross_account_role = iam.Role(
             self,
             "CrossAccountPipelineRole",
@@ -71,11 +64,16 @@ class AwsLcCiPipeline(Stack):
             )
         )
 
-        source = pipelines.CodePipelineSource.connection(
+        github_token = secretsmanager.Secret.from_secret_name_v2(
+            self,
+            "GitHubToken",
+            "aws-lc/ci/github/token"
+        )
+
+        source = pipelines.CodePipelineSource.git_hub(
             f"{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}",
             GITHUB_SOURCE_VERSION,
-            connection_arn=gh_connection.attr_connection_arn,
-            code_build_clone_output=True,
+            authentication=github_token.secret_value,
         )
 
         # Create a base pipeline to upgrade the default pipeline type

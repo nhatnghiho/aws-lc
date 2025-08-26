@@ -13,6 +13,8 @@ from util.metadata import (
     WIN_EC2_TAG_KEY,
     WIN_EC2_TAG_VALUE,
     SSM_DOCUMENT_NAME,
+    GITHUB_REPO_OWNER,
+    GITHUB_REPO_NAME,
 )
 
 
@@ -92,6 +94,8 @@ class WindowsDockerImageBuildStage(Stage):
                 "WIN_EC2_TAG_VALUE": WIN_EC2_TAG_VALUE,
                 "WIN_DOCKER_BUILD_SSM_DOCUMENT": SSM_DOCUMENT_NAME,
                 "S3_FOR_WIN_DOCKER_IMG_BUILD": self.s3_bucket_name,
+                "GITHUB_REPO_OWNER": GITHUB_REPO_OWNER,
+                "GITHUB_REPO_NAME": GITHUB_REPO_NAME
             },
             role=role,
             timeout=Duration.minutes(timeout),
