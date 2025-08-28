@@ -337,7 +337,10 @@ static bool WriteOutput(BIO *out_bio, const std::vector<uint8_t> &data,
       BIO_printf(out_bio, "(stdin)=");
     }
 
-    BIO_hexdump(out_bio, data.data(), data.size(), 0);
+    // BIO_hexdump(out_bio, data.data(), data.size(), 0);
+    for (size_t i = 0; i < data.size(); i++) {
+      BIO_printf(out_bio, "%02x", data[i]);
+    }
     BIO_printf(out_bio, "\n");
   }
 
@@ -406,7 +409,9 @@ static bool dgstToolInternal(const args_list_t &args, const EVP_MD *digest) {
     digest = EVP_get_digestbyname(digest_name.substr(1).c_str());
   }
 
-  if (!hex && (binary || !sign_key_file.empty() || !verify_key_file.empty())) {
+  if (hex) {
+    out_bin = false;
+  } else if (binary || !sign_key_file.empty() || !verify_key_file.empty()) {
     out_bin = true;
   }
 
