@@ -66,3 +66,10 @@ class AwsLcBaseCiStack(Stack):
                 "GITHUB_TRIAGE",
             ],
         }
+
+        self.webhook_policy = [
+            {
+                "Pattern": "ISSUE_COMMENT",
+                "Type": "EVENT"
+            }
+        ]
