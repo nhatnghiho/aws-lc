@@ -9,13 +9,34 @@ set -exuo pipefail
 # -u: Any variable that is not set will cause an error if used
 # -o pipefail: Makes sure to exit a pipeline with a non-zero error code if any command in the pipeline exists with a
 #              non-zero error code.
+#set +x
+#CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::351119683581:role/aws-lc-ci-devicefarm-andr-awslccidevicefarmandroidr-BUnvxrEGJOxc" --role-session-name "test_session")
+#export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId)
+#export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey)
+#export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken)
+#set -x
+
+AWS_ACCOUNT_ID=$(echo $CODEBUILD_BUILD_ARN | cut -d':' -f5)
+
+# Device farm configuration by environment
+if [[ $AWS_ACCOUNT_ID == "620771051181" ]]; then
+    # Production environment
+    PROJECT_ID="d1e78543-a776-49c5-9452-9a2b3448b728"
+    FIPS_POOL_ID="4726586b-cdbc-4dc0-98a5-38e7448e3691"
+    NON_FIPS_POOL_ID="4e72604c-86eb-41b6-9383-7797c04328b4"
+else
+    # Pre-production environment
+    PROJECT_ID="6af5c577-c27c-4d08-88b1-09525b3e4a04"
+    FIPS_POOL_ID="93cb4c26-91f8-4a70-952c-33901b576a07"
+    NON_FIPS_POOL_ID="de1c3120-85d9-4344-b732-ef8fc65274bf"
+fi
 
 # Device Farm project to designate Device Farm runs. The two device pools defined below should also belong to this project.
-AWSLC_DEVICEFARM_PROJECT='arn:aws:devicefarm:us-west-2:620771051181:project:d1e78543-a776-49c5-9452-9a2b3448b728'
+AWSLC_DEVICEFARM_PROJECT="arn:aws:devicefarm:us-west-2:${AWS_ACCOUNT_ID}:project:${PROJECT_ID}"
 # Device pool arn for FIPS.
-AWSLC_FIPS_DEVICEFARM_DEVICE_POOL='arn:aws:devicefarm:us-west-2:620771051181:devicepool:d1e78543-a776-49c5-9452-9a2b3448b728/4726586b-cdbc-4dc0-98a5-38e7448e3691'
+AWSLC_FIPS_DEVICEFARM_DEVICE_POOL="arn:aws:devicefarm:us-west-2:${AWS_ACCOUNT_ID}:devicepool:${PROJECT_ID}/${FIPS_POOL_ID}"
 # Device pool arn for non-FIPS.
-AWSLC_NON_FIPS_DEVICEFARM_DEVICE_POOL='arn:aws:devicefarm:us-west-2:620771051181:devicepool:d1e78543-a776-49c5-9452-9a2b3448b728/4e72604c-86eb-41b6-9383-7797c04328b4'
+AWSLC_NON_FIPS_DEVICEFARM_DEVICE_POOL="arn:aws:devicefarm:us-west-2:${AWS_ACCOUNT_ID}:devicepool:${PROJECT_ID}/${NON_FIPS_POOL_ID}"
 
 ###########################
 # Main and related helper #
@@ -44,8 +65,8 @@ function export_global_variables() {
     export ANDROID_TEST_NAME='AWS-LC Android Test'
   fi
   if [[ -z "${DEVICEFARM_PROJECT+x}" || -z "${DEVICEFARM_PROJECT}" ]]; then
-    export DEVICEFARM_PROJECT=$AWSLC_DEVICEFARM_PROJECT
-  fi
+      export DEVICEFARM_PROJECT=$AWSLC_DEVICEFARM_PROJECT
+    fi
   if [[ -z "${FIPS+x}" || -z "${FIPS}" ]]; then
     export FIPS=false
   fi

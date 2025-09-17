@@ -25,9 +25,11 @@ function copy_images() {
   for repo in $REPOS; do
     echo "Processing repo: $repo"
 
-    image_details=$(aws ecr describe-images --repository-name "$repo" --region ${AWS_REGION} \
-            --query 'imageDetails[?length(imageTags) > `0` && imageTags[?ends_with(@, `_latest`)]].{ImageNamesWithTag: imageTags[*] | [*].join(`:`, [`'"${repo}"'`, @]), ImageDigest: imageDigest}' \
-            --output json)
+    image_details=$(aws ecr describe-images \
+                    --repository-name "$repo" \
+                    --region ${AWS_REGION} \
+                    --query 'imageDetails[?imageTags && length(imageTags) > `0`] | [?imageTags[?ends_with(@, `_latest`)]] | [].{ImageNamesWithTag: imageTags[*] | [*].join(`:`, [`'"${repo}"'`, @]), ImageDigest: imageDigest}' \
+                    --output json)
     
     # Process each image with _latest tag
     for image in $(echo "${image_details}" | jq -c '.[]'); do

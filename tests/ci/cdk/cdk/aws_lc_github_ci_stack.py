@@ -104,6 +104,10 @@ class AwsLcGitHubCIStack(AwsLcBaseCiStack):
         )
 
         cfn_project.add_property_override("Triggers.PullRequestBuildPolicy", self.pull_request_policy)
+        
+        # Add additional filter group for pull request policy
+        # existing_filters = len(cfn_project.triggers[0].filter_groups)
+        # cfn_project.add_property_override(f"Triggers.FilterGroups.2", self.webhook_policy)
 
         project.enable_batch_builds()
 
