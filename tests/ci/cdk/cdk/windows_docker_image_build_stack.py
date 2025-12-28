@@ -135,6 +135,7 @@ class WindowsDockerImageBuildStack(Stack):
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             machine_image=machine_image,
             user_data=setup_user_data,
+            require_imdsv2=True,
             instance_name="{}-instance".format(id),
         )
 
