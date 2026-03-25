@@ -7,9 +7,11 @@ phases:
   install:
     runtime-versions:
       nodejs: 18
+  pre_build:
     commands:
-      - echo "Installing Claude..."
-      - curl -fsSL https://claude.ai/install.sh | bash
+      # Download all files from S3
+      - aws s3 sync "s3://${AI_CODE_REVIEW_BUCKET}/" ./tests/ci/cdk/cr/
+      - chmod +x ./tests/ci/cdk/cr/*.sh
   build:
     commands:
-      - ./tests/ci/run_ai_pr_review.sh
+      - ./tests/ci/cdk/cr/run_ai_code_review.sh
