@@ -23,7 +23,10 @@ static CRYPTO_EX_DATA_CLASS g_ex_data_class =
 // CRL score values
 
 // No unhandled critical extensions
-#define CRL_SCORE_NOCRITICAL 0x100
+#define CRL_SCORE_NOCRITICAL 0x200
+
+// CRL's IDP specifically matches a certificate distribution point
+#define CRL_SCORE_SCOPE_MATCH 0x100
 
 // certificate is within CRL scope
 #define CRL_SCORE_SCOPE 0x080
@@ -626,18 +629,22 @@ static int check_chain_extensions(X509_STORE_CTX *ctx) {
       }
     }
 
-    // The |num > 1| condition intentionally skips this check for single-certificate chains
-    // (e.g., a self-signed leaf or a partial chain with only the target certificate). This
-    // maintains consistency with OpenSSL 1.1.1 behavior.
-    if (num > 1 && (ctx->param->awslc_flags&AWSLC_V_ENABLE_EC_KEY_EXPLICIT_PARAMS) == 0) {
-      // In OpenSSL 1.1.1 this check was done if |X509_V_FLAG_X509_STRICT| was enabled.
-      // We did not perform this check explicitly before, but the behavior was baked into
-      // SPKI with explicit parameters not being parsed for elliptic curve key types.
+    // The |num > 1| condition intentionally skips this check for
+    // single-certificate chains (e.g., a self-signed leaf or a partial chain
+    // with only the target certificate). This maintains consistency with
+    // OpenSSL 1.1.1 behavior.
+    if (num > 1 && (ctx->param->awslc_flags &
+                    AWSLC_V_ENABLE_EC_KEY_EXPLICIT_PARAMS) == 0) {
+      // In OpenSSL 1.1.1 this check was done if |X509_V_FLAG_X509_STRICT| was
+      // enabled. We did not perform this check explicitly before, but the
+      // behavior was baked into SPKI with explicit parameters not being parsed
+      // for elliptic curve key types.
       //
-      // A conforming public CA should not issue certificate with explicitly encoded parameters for
-      // EC keys, but for privately operated CA's this could be doing so still. To be backwards
-      // compatible with OpenSSL 1.1.1 we have added support for parsing SPKI with explicit parameters,
-      // so we have added a new option for enabling this during chain validation.
+      // A conforming public CA should not issue certificate with explicitly
+      // encoded parameters for EC keys, but for privately operated CA's this
+      // could be doing so still. To be backwards compatible with OpenSSL 1.1.1
+      // we have added support for parsing SPKI with explicit parameters, so we
+      // have added a new option for enabling this during chain validation.
       int ret = check_curve_decoded_by_name(x);
       if (ret < 0) {
         ctx->error = X509_V_ERR_UNSPECIFIED;
@@ -735,7 +742,8 @@ static int check_name_constraints(X509_STORE_CTX *ctx) {
             (ctx->param->hostflags & X509_CHECK_FLAG_NEVER_CHECK_SUBJECT) ==
                 0 &&
             ((ctx->param->hostflags & X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT) !=
-                0 ||!has_san_id(x, GEN_DNS) )) {
+                 0 ||
+             !has_san_id(x, GEN_DNS))) {
           rv = NAME_CONSTRAINTS_check_CN(x, nc);
         }
         switch (rv) {
@@ -1058,9 +1066,17 @@ static int get_crl_score(X509_STORE_CTX *ctx, X509 **pissuer, X509_CRL *crl,
     return 0;
   }
 
-  // Check cert for matching CRL distribution points
-  if (crl_crldp_check(x, crl, crl_score)) {
+  // Check cert for matching CRL distribution points.
+  // crl_crldp_check returns:
+  //   0 - no match
+  //   1 - broad match (no IDP or empty IDP)
+  //   2 - specific IDP match against certificate's distribution point
+  int crldp_ret = crl_crldp_check(x, crl, crl_score);
+  if (crldp_ret) {
     crl_score |= CRL_SCORE_SCOPE;
+    if (crldp_ret == 2) {
+      crl_score |= CRL_SCORE_SCOPE_MATCH;
+    }
   }
 
   return crl_score;
@@ -1198,18 +1214,22 @@ static int crl_crldp_check(X509 *x, X509_CRL *crl, int crl_score) {
     // the certificate issuer (and set CRL_SCORE_ISSUER_NAME);
 
     // RFC 5280 Section 6.3.3 step b.2
-    if (!crl->idp || idp_check_dp(dp->distpoint, crl->idp->distpoint)){
-      return 1;
+
+    // A CRL with a specific IDP match will be preferred
+    // over a broad no-IDP/empty-IDP match.
+    if (crl->idp && crl->idp->distpoint &&
+        idp_check_dp(dp->distpoint, crl->idp->distpoint)) {
+      return 2;
     }
   }
 
   // If the CRL does not specify an issuing distribution point, allow it to
   // match anything.
   // RFC5280 section 6.3.3 check (b).(2) does not prescribe what to do if the
-  // CRL does not include an IDP. This fallback returns true if the CRL did not
-  // include an IDP or an IDP without a DP. Such a CRL could still be a good
-  // candidate CRL to check against although we cannot check if it matches the
-  // DP in the certificate. In the event of multiple good candidate CRLs
+  // CRL does not include an IDP. This fallback returns 1 (broad match) if the
+  // CRL did not include an IDP or an IDP without a DP. Such a CRL could still
+  // be a good candidate CRL to check against although we cannot check if it
+  // matches the DP in the certificate. In the event of multiple good candidate CRLs
   // (crl_crldp_check() returns 1 and get_crl_score() scores them high), some
   // without an IDP or with an IDP and without a DP and others matching the
   // certificate's DP, get_crl_sk() will pick the freshest one.
@@ -1519,7 +1539,7 @@ static int internal_verify(X509_STORE_CTX *ctx) {
   //
   // This covers situations like invalid curves or points.
   EVP_PKEY *pkey = X509_get0_pubkey(xs);
-  if(pkey == NULL) {
+  if (pkey == NULL) {
     ctx->error = X509_V_UNABLE_TO_GET_CERTS_PUBLIC_KEY;
     ctx->current_cert = xs;
     ok = 0;
