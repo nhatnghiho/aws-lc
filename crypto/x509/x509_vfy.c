@@ -21,23 +21,41 @@ static CRYPTO_EX_DATA_CLASS g_ex_data_class =
     CRYPTO_EX_DATA_CLASS_INIT_WITH_APP_DATA;
 
 // CRL score values
+//
+// The bit layout below is carefully chosen so that a numerical comparison
+// against |CRL_SCORE_VALID| is equivalent to "NOCRITICAL, SCOPE, and TIME
+// are all set." For that to hold, the sum of every bit strictly below TIME
+// (ISSUER_NAME | ISSUER_CERT | SAME_PATH | AKID) must be less than TIME,
+// TIME must be less than SCOPE, and SCOPE less than NOCRITICAL. Preserve
+// this invariant when adjusting these values.
 
 // No unhandled critical extensions
 #define CRL_SCORE_NOCRITICAL 0x200
 
-// CRL's IDP specifically matches a certificate distribution point
-#define CRL_SCORE_SCOPE_MATCH 0x100
-
 // certificate is within CRL scope
-#define CRL_SCORE_SCOPE 0x080
+#define CRL_SCORE_SCOPE 0x100
 
 // CRL times valid
-#define CRL_SCORE_TIME 0x040
+#define CRL_SCORE_TIME 0x080
+
+// CRL's IDP specifically matches a certificate distribution point.
+//
+// Embeds CRL_SCORE_SCOPE so a specific-IDP CRL always outranks a broad
+// no-IDP/empty-IDP CRL of equal freshness. The extra 0x040 bit is placed
+// strictly below CRL_SCORE_TIME so that CRL_SCORE_SCOPE_MATCH alone cannot
+// push a score across CRL_SCORE_VALID; a specific-IDP CRL must still be
+// fresh (TIME) and free of unhandled critical extensions (NOCRITICAL) to
+// qualify as valid.
+#define CRL_SCORE_SCOPE_MATCH (CRL_SCORE_SCOPE | 0x040)
 
 // Issuer name matches certificate
 #define CRL_SCORE_ISSUER_NAME 0x020
 
-// If this score or above CRL is probably valid
+// If this score or above CRL is probably valid.
+//
+// CRL_SCORE_SCOPE_MATCH is intentionally excluded: a specific-IDP CRL that
+// is missing NOCRITICAL or TIME must not be considered valid on the basis
+// of its scope match alone.
 #define CRL_SCORE_VALID \
   (CRL_SCORE_NOCRITICAL | CRL_SCORE_TIME | CRL_SCORE_SCOPE)
 
@@ -629,22 +647,18 @@ static int check_chain_extensions(X509_STORE_CTX *ctx) {
       }
     }
 
-    // The |num > 1| condition intentionally skips this check for
-    // single-certificate chains (e.g., a self-signed leaf or a partial chain
-    // with only the target certificate). This maintains consistency with
-    // OpenSSL 1.1.1 behavior.
-    if (num > 1 && (ctx->param->awslc_flags &
-                    AWSLC_V_ENABLE_EC_KEY_EXPLICIT_PARAMS) == 0) {
-      // In OpenSSL 1.1.1 this check was done if |X509_V_FLAG_X509_STRICT| was
-      // enabled. We did not perform this check explicitly before, but the
-      // behavior was baked into SPKI with explicit parameters not being parsed
-      // for elliptic curve key types.
+    // The |num > 1| condition intentionally skips this check for single-certificate chains
+    // (e.g., a self-signed leaf or a partial chain with only the target certificate). This
+    // maintains consistency with OpenSSL 1.1.1 behavior.
+    if (num > 1 && (ctx->param->awslc_flags&AWSLC_V_ENABLE_EC_KEY_EXPLICIT_PARAMS) == 0) {
+      // In OpenSSL 1.1.1 this check was done if |X509_V_FLAG_X509_STRICT| was enabled.
+      // We did not perform this check explicitly before, but the behavior was baked into
+      // SPKI with explicit parameters not being parsed for elliptic curve key types.
       //
-      // A conforming public CA should not issue certificate with explicitly
-      // encoded parameters for EC keys, but for privately operated CA's this
-      // could be doing so still. To be backwards compatible with OpenSSL 1.1.1
-      // we have added support for parsing SPKI with explicit parameters, so we
-      // have added a new option for enabling this during chain validation.
+      // A conforming public CA should not issue certificate with explicitly encoded parameters for
+      // EC keys, but for privately operated CA's this could be doing so still. To be backwards
+      // compatible with OpenSSL 1.1.1 we have added support for parsing SPKI with explicit parameters,
+      // so we have added a new option for enabling this during chain validation.
       int ret = check_curve_decoded_by_name(x);
       if (ret < 0) {
         ctx->error = X509_V_ERR_UNSPECIFIED;
@@ -742,8 +756,7 @@ static int check_name_constraints(X509_STORE_CTX *ctx) {
             (ctx->param->hostflags & X509_CHECK_FLAG_NEVER_CHECK_SUBJECT) ==
                 0 &&
             ((ctx->param->hostflags & X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT) !=
-                 0 ||
-             !has_san_id(x, GEN_DNS))) {
+                0 ||!has_san_id(x, GEN_DNS) )) {
           rv = NAME_CONSTRAINTS_check_CN(x, nc);
         }
         switch (rv) {
@@ -1229,10 +1242,10 @@ static int crl_crldp_check(X509 *x, X509_CRL *crl, int crl_score) {
   // CRL does not include an IDP. This fallback returns 1 (broad match) if the
   // CRL did not include an IDP or an IDP without a DP. Such a CRL could still
   // be a good candidate CRL to check against although we cannot check if it
-  // matches the DP in the certificate. In the event of multiple good candidate CRLs
-  // (crl_crldp_check() returns 1 and get_crl_score() scores them high), some
-  // without an IDP or with an IDP and without a DP and others matching the
-  // certificate's DP, get_crl_sk() will pick the freshest one.
+  // matches the DP in the certificate. A CRL with a specific IDP match
+  // (return 2) receives CRL_SCORE_SCOPE_MATCH in addition to CRL_SCORE_SCOPE,
+  // so it will be preferred over a broad match. Among CRLs with the same
+  // scope class, get_crl_sk() will pick the freshest one.
   return !crl->idp || !crl->idp->distpoint;
 }
 
@@ -1539,7 +1552,7 @@ static int internal_verify(X509_STORE_CTX *ctx) {
   //
   // This covers situations like invalid curves or points.
   EVP_PKEY *pkey = X509_get0_pubkey(xs);
-  if (pkey == NULL) {
+  if(pkey == NULL) {
     ctx->error = X509_V_UNABLE_TO_GET_CERTS_PUBLIC_KEY;
     ctx->current_cert = xs;
     ok = 0;
