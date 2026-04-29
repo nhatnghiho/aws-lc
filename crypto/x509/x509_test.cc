@@ -2448,6 +2448,47 @@ TEST(X509Test, CRLSpecificIDPPreferredOverBroadCRL) {
                      X509_V_FLAG_CRL_CHECK));
   }
 
+  // specific_expired_vs_broad_in_window: a specific-IDP CRL that revokes the
+  // leaf but has expired (nextUpdate before verification time) should lose to
+  // a time-valid broad CRL. SCOPE_MATCH is intentionally not part of
+  // CRL_SCORE_VALID, so an expired specific CRL cannot outrank a valid broad
+  // CRL via the SCOPE_MATCH bit alone.
+  {
+    SCOPED_TRACE("specific_expired_vs_broad_in_window");
+    auto broad = MakeTestCRL(root.get(), key.get(), nullptr, {},
+                             /*crl_age=*/-1);
+    auto specific = MakeTestCRL(root.get(), key.get(), kCRLURI,
+                                {kLeafSerial}, /*crl_age=*/-1);
+    ASSERT_TRUE(broad);
+    ASSERT_TRUE(specific);
+
+    // Set the specific CRL's nextUpdate to before kReferenceTime so it
+    // appears expired at verification time, then re-sign and re-parse.
+    bssl::UniquePtr<ASN1_TIME> expired(ASN1_TIME_new());
+    ASSERT_TRUE(expired);
+    ASSERT_TRUE(ASN1_TIME_adj(expired.get(), kReferenceTime, -1, 0));
+    ASSERT_TRUE(X509_CRL_set1_nextUpdate(specific.get(), expired.get()));
+    ASSERT_TRUE(X509_CRL_sign(specific.get(), key.get(), EVP_sha256()));
+    uint8_t *der = nullptr;
+    int der_len = i2d_X509_CRL(specific.get(), &der);
+    ASSERT_GT(der_len, 0);
+    const uint8_t *inp = der;
+    specific.reset(d2i_X509_CRL(nullptr, &inp, der_len));
+    OPENSSL_free(der);
+    ASSERT_TRUE(specific);
+
+    // The broad in-window CRL should be preferred. Since it doesn't list
+    // the revocation, the cert verifies as OK.
+    EXPECT_EQ(X509_V_OK,
+              Verify(leaf.get(), {root.get()}, {root.get()},
+                     {broad.get(), specific.get()},
+                     X509_V_FLAG_CRL_CHECK));
+    EXPECT_EQ(X509_V_OK,
+              Verify(leaf.get(), {root.get()}, {root.get()},
+                     {specific.get(), broad.get()},
+                     X509_V_FLAG_CRL_CHECK));
+  }
+
   // specific_with_unknown_critical_ext: a specific-IDP CRL that revokes the
   // leaf but has an unhandled critical extension should lose to a processable
   // broad CRL. The broad CRL doesn't list the revocation, so the cert should
@@ -2471,7 +2512,7 @@ TEST(X509Test, CRLSpecificIDPPreferredOverBroadCRL) {
     ASSERT_TRUE(oid);
     bssl::UniquePtr<ASN1_OCTET_STRING> ext_val(ASN1_OCTET_STRING_new());
     ASSERT_TRUE(ext_val);
-    ASN1_OCTET_STRING_set(ext_val.get(), kUnknownOID, sizeof(kUnknownOID));
+    ASSERT_TRUE(ASN1_OCTET_STRING_set(ext_val.get(), kUnknownOID, sizeof(kUnknownOID)));
     bssl::UniquePtr<X509_EXTENSION> ext(
         X509_EXTENSION_create_by_OBJ(nullptr, oid.get(), /*crit=*/1,
                                      ext_val.get()));
