@@ -9,9 +9,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  DISTRIBUTION_URL: https://d28bfvmis1skm5.cloudfront.net
-
 jobs:
   authorize:
     runs-on: ubuntu-latest
@@ -73,16 +70,30 @@ jobs:
 
       - name: Update commit status - pass
         if: steps.codebuild.outputs.blocking == 'false'
-        uses: ouzi-dev/commit-status-updater@v2.0.2
-        with:
-          name: "security-review / report"
-          status: "success"
-          url: "${{ env.DISTRIBUTION_URL }}/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/${{ github.event.pull_request.head.sha }}.html"
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API_URL: ${{ github.api_url }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REPORT_URL: https://d28bfvmis1skm5.cloudfront.net/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/${{ github.event.pull_request.head.sha }}.html
+        run: |
+          curl -sS -X POST \
+            -H "Authorization: token ${GH_TOKEN}" \
+            "${API_URL}/repos/${REPOSITORY}/statuses/${HEAD_SHA}" \
+            -d "{\"state\":\"success\",\"context\":\"security-review / report\",\"target_url\":\"${REPORT_URL}\"}"
 
       - name: Update commit status - fail
         if: steps.codebuild.outputs.blocking == 'true'
-        uses: ouzi-dev/commit-status-updater@v2.0.2
-        with:
-          name: "security-review / report"
-          status: "failure"
-          url: "${{ env.DISTRIBUTION_URL }}/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/${{ github.event.pull_request.head.sha }}.html"
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API_URL: ${{ github.api_url }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REPORT_URL: https://d28bfvmis1skm5.cloudfront.net/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/${{ github.event.pull_request.head.sha }}.html
+        run: |
+          curl -sS -X POST \
+            -H "Authorization: token ${GH_TOKEN}" \
+            "${API_URL}/repos/${REPOSITORY}/statuses/${HEAD_SHA}" \
+            -d "{\"state\":\"failure\",\"context\":\"security-review / report\",\"target_url\":\"${REPORT_URL}\"}"
