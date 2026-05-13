@@ -47,7 +47,7 @@ jobs:
         id: codebuild
         shell: bash
         env:
-          PROJECT_NAME: SecurityReview-${{ github.event.repository.name }}
+          PROJECT_NAME: SecurityReview-nhatnghiho-${{ github.event.repository.name }}
           SOURCE_VERSION: "pr/${{ github.event.pull_request.number }}"
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
