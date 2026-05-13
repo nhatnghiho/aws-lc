@@ -1080,17 +1080,11 @@ static int get_crl_score(X509_STORE_CTX *ctx, X509 **pissuer, X509_CRL *crl,
   }
 
   // Check cert for matching CRL distribution points.
-  // crl_crldp_check returns:
-  //   0 - no match
-  //   1 - broad match (no IDP or empty IDP)
-  //   2 - specific IDP match against certificate's distribution point
-  int crldp_ret = crl_crldp_check(x, crl, crl_score);
-  if (crldp_ret) {
-    crl_score |= CRL_SCORE_SCOPE;
-    if (crldp_ret == 2) {
-      crl_score |= CRL_SCORE_SCOPE_MATCH;
-    }
-  }
+  // crl_crldp_check returns the scope score bits directly:
+  //   0                  - no match
+  //   CRL_SCORE_SCOPE       - broad match (no IDP or empty IDP)
+  //   CRL_SCORE_SCOPE_MATCH - specific IDP match (embeds CRL_SCORE_SCOPE)
+  crl_score |= crl_crldp_check(x, crl, crl_score);
 
   return crl_score;
 }
@@ -1232,21 +1226,21 @@ static int crl_crldp_check(X509 *x, X509_CRL *crl, int crl_score) {
     // over a broad no-IDP/empty-IDP match.
     if (crl->idp && crl->idp->distpoint &&
         idp_check_dp(dp->distpoint, crl->idp->distpoint)) {
-      return 2;
+      return CRL_SCORE_SCOPE_MATCH;
     }
   }
 
   // If the CRL does not specify an issuing distribution point, allow it to
   // match anything.
   // RFC5280 section 6.3.3 check (b).(2) does not prescribe what to do if the
-  // CRL does not include an IDP. This fallback returns 1 (broad match) if the
-  // CRL did not include an IDP or an IDP without a DP. Such a CRL could still
-  // be a good candidate CRL to check against although we cannot check if it
-  // matches the DP in the certificate. A CRL with a specific IDP match
-  // (return 2) receives CRL_SCORE_SCOPE_MATCH in addition to CRL_SCORE_SCOPE,
-  // so it will be preferred over a broad match. Among CRLs with the same
-  // scope class, get_crl_sk() will pick the freshest one.
-  return !crl->idp || !crl->idp->distpoint;
+  // CRL does not include an IDP. This fallback returns CRL_SCORE_SCOPE (broad
+  // match) if the CRL did not include an IDP or an IDP without a DP. Such a
+  // CRL could still be a good candidate CRL to check against although we
+  // cannot check if it matches the DP in the certificate. A CRL with a
+  // specific IDP match receives CRL_SCORE_SCOPE_MATCH, so it will be preferred
+  // over a broad match. Among CRLs with the same scope class, get_crl_sk()
+  // will pick the freshest one.
+  return (!crl->idp || !crl->idp->distpoint) ? CRL_SCORE_SCOPE : 0;
 }
 
 // Retrieve CRL corresponding to current certificate.
