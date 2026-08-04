@@ -32,7 +32,7 @@ information about required dependencies and build options. If you’re intereste
 getting involved [open an issue](https://github.com/aws/aws-lc/issues/new/choose) to discuss your plan.
 [Contributing.md](https://github.com/aws/aws-lc/blob/main/CONTRIBUTING.md) has
 info for how to specifically make the change and get it reviewed by AWS-LC maintainers.
-If you just want to use AWS-LC, see our existing documentation in the public header
+If you just want to use AWS-LC, see our [existing documentation](https://aws.github.io/aws-lc/headers.html) in the public header
 files. If you’re moving your application from OpenSSL, see the
 [porting guide](https://github.com/aws/aws-lc/blob/main/PORTING.md)
 for more information.
@@ -65,6 +65,20 @@ is used to run tests on many different x86 processors.
 If you use another CPU and would like to make sure we test it or discuss adding
 an assembly optimized algorithm implementation, please open an issue to discuss
 adding it to our CI.
+
+### Distribution Packaging
+
+AWS-LC supports distribution packaging mode for system-wide installation on Linux
+and BSD systems. When built with `-DENABLE_DIST_PKG=1`, AWS-LC enables:
+
+- **SONAME versioning**: Libraries use standard SONAME (e.g., `libcrypto-awslc.so.1`)
+- **Symbol versioning**: ELF symbol versioning for ABI stability tracking (e.g., `AWS_LC_1.0`)
+- **Cohabitant headers**: Headers installed to `include/aws-lc/openssl/` to coexist with other crypto libraries
+
+Symbol versioning assigns every public API symbol to a named version node. New symbols
+introduced in future releases get new version nodes that inherit from their predecessors,
+enabling fine-grained compatibility tracking. See [docs/SymbolVersioning.md](docs/SymbolVersioning.md)
+for details.
 
 ## Platform Support
 
