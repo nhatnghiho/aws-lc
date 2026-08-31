@@ -86,7 +86,16 @@ static int get_crl(X509_STORE_CTX *ctx, X509_CRL **pcrl, X509 *x);
 static int crl_akid_check(X509_STORE_CTX *ctx, X509_CRL *crl, X509 **pissuer,
                           int *pcrl_score);
 static int crl_crldp_check(X509 *x, X509_CRL *crl, int crl_score, int *idp_match);
-static int cert_crl(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x);
+static int cert_revoked(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x,
+                              int *out_revoked);
+static int check_single_crl(X509_STORE_CTX *ctx, X509 *x);
+static int check_all_crls(X509_STORE_CTX *ctx, X509 *x);
+static int check_crl_time(X509_STORE_CTX *ctx, X509_CRL *crl, int notify);
+static int crl_check_validity(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *issuer,
+                              int score, int notify);
+static STACK_OF(X509_CRL) *collect_usable_crls(
+    X509_STORE_CTX *ctx, X509 *x, X509_CRL **fallback_crl,
+    X509 **fallback_issuer, int *fallback_score);
 
 static int internal_verify(X509_STORE_CTX *ctx);
 
@@ -895,15 +904,26 @@ static int check_revocation(X509_STORE_CTX *ctx) {
 }
 
 static int check_cert(X509_STORE_CTX *ctx) {
-  X509_CRL *crl = NULL;
-  int ok = 0, cnum = ctx->error_depth;
+  int cnum = ctx->error_depth;
   X509 *x = sk_X509_value(ctx->chain, cnum);
   ctx->current_cert = x;
   ctx->current_issuer = NULL;
   ctx->current_crl_score = 0;
 
-  // Try to retrieve relevant CRL
-  ok = ctx->get_crl(ctx, &crl, x);
+  // Check against every applicable CRL (RFC 5280 section 6.3.3). A custom
+  // |get_crl| hook only exposes one CRL, so it keeps the legacy single-CRL path.
+  if (ctx->get_crl == get_crl) {
+    return check_all_crls(ctx, x);
+  }
+  return check_single_crl(ctx, x);
+}
+
+// check_single_crl retrieves one CRL via |ctx->get_crl| and checks the
+// certificate against it. Used only for custom |get_crl| hooks.
+static int check_single_crl(X509_STORE_CTX *ctx, X509 *x) {
+  X509_CRL *crl = NULL;
+  int revoked = 0;
+  int ok = ctx->get_crl(ctx, &crl, x);
   // If error looking up CRL, nothing we can do except notify callback
   if (!ok) {
     ctx->error = X509_V_ERR_UNABLE_TO_GET_CRL;
@@ -916,14 +936,201 @@ static int check_cert(X509_STORE_CTX *ctx) {
     goto err;
   }
 
-  ok = cert_crl(ctx, crl, x);
-  if (!ok) {
-    goto err;
-  }
+  ok = cert_revoked(ctx, crl, x, &revoked);
 
 err:
   X509_CRL_free(crl);
   ctx->current_crl = NULL;
+  return ok;
+}
+
+// crl_check_validity checks that |crl| is usable: |issuer| may sign CRLs, |x|
+// is in scope, the IDP is valid, the CRL is time-valid, and the signature
+// verifies. |score| is |crl|'s |get_crl_score| result. When |notify| is set,
+// failures are reported through the verify callback (overridable, matching the
+// historical |check_crl|); otherwise it is a silent predicate returning 0 on
+// the first failure.
+static int crl_check_validity(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *issuer,
+                              int score, int notify) {
+  if (issuer == NULL) {
+    return 0;
+  }
+  // Issuer must be permitted to sign CRLs.
+  if ((issuer->ex_flags & EXFLAG_KUSAGE) &&
+      !(issuer->ex_kusage & X509v3_KU_CRL_SIGN)) {
+    if (!notify) {
+      return 0;
+    }
+    ctx->error = X509_V_ERR_KEYUSAGE_NO_CRL_SIGN;
+    if (!call_verify_cb(0, ctx)) {
+      return 0;
+    }
+  }
+  // Certificate must be within the CRL's scope.
+  if (!(score & CRL_SCORE_SCOPE)) {
+    if (!notify) {
+      return 0;
+    }
+    ctx->error = X509_V_ERR_DIFFERENT_CRL_SCOPE;
+    if (!call_verify_cb(0, ctx)) {
+      return 0;
+    }
+  }
+  if (crl->idp_flags & IDP_INVALID) {
+    if (!notify) {
+      return 0;
+    }
+    ctx->error = X509_V_ERR_INVALID_EXTENSION;
+    if (!call_verify_cb(0, ctx)) {
+      return 0;
+    }
+  }
+  // CRL must be time-valid, unless scoring already established that.
+  if (!(score & CRL_SCORE_TIME) && !check_crl_time(ctx, crl, notify)) {
+    return 0;
+  }
+  // CRL signature must verify against the issuer's public key.
+  EVP_PKEY *ikey = X509_get0_pubkey(issuer);
+  if (ikey == NULL) {
+    if (!notify) {
+      return 0;
+    }
+    ctx->error = X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY;
+    if (!call_verify_cb(0, ctx)) {
+      return 0;
+    }
+  } else if (X509_CRL_verify(crl, ikey) <= 0) {
+    if (!notify) {
+      return 0;
+    }
+    ctx->error = X509_V_ERR_CRL_SIGNATURE_FAILURE;
+    if (!call_verify_cb(0, ctx)) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+// crl_is_newer returns one if |b|'s lastUpdate is strictly later than |a|'s.
+static int crl_is_newer(const X509_CRL *a, const X509_CRL *b) {
+  int day, sec;
+  if (!ASN1_TIME_diff(&day, &sec, X509_CRL_get0_lastUpdate(a),
+                      X509_CRL_get0_lastUpdate(b))) {
+    return 0;
+  }
+  return day > 0 || sec > 0;
+}
+
+// push_candidate_crls scores every CRL in |in| for |x|. Usable ones (in scope
+// and passing |crl_check_validity|) are appended to |usable| with a new
+// reference. The highest-scoring relevant-but-unusable candidate (near match or
+// valid-scored-but-invalid, ties broken by newer lastUpdate) is tracked in
+// |*fallback_crl| (new ref) / |*fallback_issuer| (borrowed) / |*fallback_score|
+// for use when no usable CRL exists.
+static void push_candidate_crls(X509_STORE_CTX *ctx, X509 *x,
+                                STACK_OF(X509_CRL) *usable,
+                                STACK_OF(X509_CRL) *in, X509_CRL **fallback_crl,
+                                X509 **fallback_issuer, int *fallback_score) {
+  for (size_t i = 0; i < sk_X509_CRL_num(in); i++) {
+    X509_CRL *crl = sk_X509_CRL_value(in, i);
+    X509 *issuer = NULL;
+    int score = get_crl_score(ctx, &issuer, crl, x);
+    if (score >= CRL_SCORE_VALID &&
+        crl_check_validity(ctx, crl, issuer, score, /*notify=*/0)) {
+      if (sk_X509_CRL_push(usable, crl)) {
+        X509_CRL_up_ref(crl);
+      }
+    } else if (score > 0 &&
+               (*fallback_crl == NULL || score > *fallback_score ||
+                (score == *fallback_score &&
+                 crl_is_newer(*fallback_crl, crl)))) {
+      X509_CRL_up_ref(crl);
+      X509_CRL_free(*fallback_crl);
+      *fallback_crl = crl;
+      *fallback_issuer = issuer;
+      *fallback_score = score;
+    }
+  }
+}
+
+// collect_usable_crls returns the usable CRLs for |x| from the context and the
+// store lookup (see |push_candidate_crls| for the fallback out-params). The
+// caller owns the returned stack (free with |sk_X509_CRL_pop_free|) and
+// |*fallback_crl|. Returns NULL on allocation failure.
+static STACK_OF(X509_CRL) *collect_usable_crls(
+    X509_STORE_CTX *ctx, X509 *x, X509_CRL **fallback_crl,
+    X509 **fallback_issuer, int *fallback_score) {
+  *fallback_crl = NULL;
+  *fallback_issuer = NULL;
+  *fallback_score = 0;
+  STACK_OF(X509_CRL) *usable = sk_X509_CRL_new_null();
+  if (usable == NULL) {
+    return NULL;
+  }
+  // Source 1: CRLs attached directly to the context.
+  push_candidate_crls(ctx, x, usable, ctx->crls, fallback_crl, fallback_issuer,
+                      fallback_score);
+  // Source 2: CRLs from the store, looked up by the certificate's issuer name.
+  STACK_OF(X509_CRL) *skcrl = ctx->lookup_crls(ctx, X509_get_issuer_name(x));
+  if (skcrl != NULL) {
+    push_candidate_crls(ctx, x, usable, skcrl, fallback_crl, fallback_issuer,
+                        fallback_score);
+    sk_X509_CRL_pop_free(skcrl, X509_CRL_free);
+  }
+  return usable;
+}
+
+// check_all_crls checks |x| against every usable CRL (RFC 5280 section 6.3.3):
+// revoked if it appears in any, stopping at the first match. Pre-filtering the
+// candidates means one bad CRL cannot mask a usable one. When none are usable,
+// it reports the highest-scoring fallback candidate's error via |check_crl|
+// (once, overridable), or X509_V_ERR_UNABLE_TO_GET_CRL if no CRL is relevant.
+static int check_all_crls(X509_STORE_CTX *ctx, X509 *x) {
+  X509_CRL *fallback_crl = NULL;
+  X509 *fallback_issuer = NULL;
+  int fallback_score = 0;
+  STACK_OF(X509_CRL) *usable = collect_usable_crls(
+      ctx, x, &fallback_crl, &fallback_issuer, &fallback_score);
+
+  int ok = 1;
+  if (usable != NULL && sk_X509_CRL_num(usable) > 0) {
+    for (size_t i = 0; i < sk_X509_CRL_num(usable); i++) {
+      X509_CRL *crl = sk_X509_CRL_value(usable, i);
+      // These CRLs are already validated; just set the state cert_revoked and
+      // the callback rely on.
+      X509 *issuer = NULL;
+      ctx->current_crl = crl;
+      ctx->current_crl_score = get_crl_score(ctx, &issuer, crl, x);
+      ctx->current_issuer = issuer;
+
+      int revoked = 0;
+      ok = cert_revoked(ctx, crl, x, &revoked);
+      if (!ok || revoked) {
+        // Callback aborted, or the cert was found revoked; no need to continue.
+        break;
+      }
+    }
+    ctx->current_crl = NULL;
+  } else if (fallback_crl != NULL) {
+    // No usable CRL: report the fallback candidate's error; if overridden,
+    // still check revocation against it.
+    ctx->current_issuer = fallback_issuer;
+    ctx->current_crl_score = fallback_score;
+    ctx->current_crl = fallback_crl;
+    ok = ctx->check_crl(ctx, fallback_crl);
+    if (ok) {
+      int revoked = 0;
+      ok = cert_revoked(ctx, fallback_crl, x, &revoked);
+    }
+    ctx->current_crl = NULL;
+  } else {
+    // No relevant CRL at all.
+    ctx->error = X509_V_ERR_UNABLE_TO_GET_CRL;
+    ok = call_verify_cb(0, ctx);
+  }
+
+  sk_X509_CRL_pop_free(usable, X509_CRL_free);
+  X509_CRL_free(fallback_crl);
   return ok;
 }
 
@@ -1308,61 +1515,24 @@ static int check_crl(X509_STORE_CTX *ctx, X509_CRL *crl) {
     }
   }
 
-  if (issuer) {
-    // Check for cRLSign bit if keyUsage present
-    if ((issuer->ex_flags & EXFLAG_KUSAGE) &&
-        !(issuer->ex_kusage & X509v3_KU_CRL_SIGN)) {
-      ctx->error = X509_V_ERR_KEYUSAGE_NO_CRL_SIGN;
-      if (!call_verify_cb(0, ctx)) {
-        return 0;
-      }
-    }
-
-    if (!(ctx->current_crl_score & CRL_SCORE_SCOPE)) {
-      ctx->error = X509_V_ERR_DIFFERENT_CRL_SCOPE;
-      if (!call_verify_cb(0, ctx)) {
-        return 0;
-      }
-    }
-
-    if (crl->idp_flags & IDP_INVALID) {
-      ctx->error = X509_V_ERR_INVALID_EXTENSION;
-      if (!call_verify_cb(0, ctx)) {
-        return 0;
-      }
-    }
-
-    if (!(ctx->current_crl_score & CRL_SCORE_TIME)) {
-      if (!check_crl_time(ctx, crl, 1)) {
-        return 0;
-      }
-    }
-
-    // Attempt to get issuer certificate public key
-    EVP_PKEY *ikey = X509_get0_pubkey(issuer);
-    if (!ikey) {
-      ctx->error = X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY;
-      if (!call_verify_cb(0, ctx)) {
-        return 0;
-      }
-    } else {
-      // Verify CRL signature
-      if (X509_CRL_verify(crl, ikey) <= 0) {
-        ctx->error = X509_V_ERR_CRL_SIGNATURE_FAILURE;
-        if (!call_verify_cb(0, ctx)) {
-          return 0;
-        }
-      }
-    }
+  if (issuer == NULL) {
+    // No issuer resolved; historically this skipped the validity checks.
+    return 1;
   }
-
-  return 1;
+  // Report validity failures (bad key usage, scope, IDP, time, signature)
+  // through the verify callback.
+  return crl_check_validity(ctx, crl, issuer, ctx->current_crl_score,
+                            /*notify=*/1);
 }
 
-// Check certificate against CRL
-static int cert_crl(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x) {
+// Check certificate against CRL. On return, |*out_revoked| is set to one if the
+// certificate's serial number was found in |crl| (regardless of whether the
+// verify callback chose to continue), and zero otherwise.
+static int cert_revoked(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x,
+                              int *out_revoked) {
   int ok;
   X509_REVOKED *rev;
+  *out_revoked = 0;
   // The rules changed for this... previously if a CRL contained unhandled
   // critical extensions it could still be used to indicate a certificate
   // was revoked. This has since been changed since critical extension can
@@ -1377,6 +1547,7 @@ static int cert_crl(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x) {
   }
   // Look for serial number of certificate in CRL.
   if (X509_CRL_get0_by_cert(crl, &rev, x)) {
+    *out_revoked = 1;
     ctx->error = X509_V_ERR_CERT_REVOKED;
     ok = call_verify_cb(0, ctx);
     if (!ok) {
